@@ -77,13 +77,19 @@
   var ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = false;
 
+  // Scale by a whole number of physical screen pixels, so every game pixel
+  // is exactly the same size. Working in physical pixels (not CSS pixels)
+  // lets the game fill almost all of a high-resolution screen.
   function resize() {
-    var s = Math.min(window.innerWidth / VW, window.innerHeight / VH);
-    if (s >= 3) s = Math.floor(s); // whole-number scaling keeps pixels even when there is room
-    canvas.style.width = Math.round(VW * s) + 'px';
-    canvas.style.height = Math.round(VH * s) + 'px';
+    if (!window.innerWidth || !window.innerHeight) return; // hidden window; wait for a real size
+    var dpr = window.devicePixelRatio || 1;
+    var s = Math.floor(Math.min(window.innerWidth * dpr / VW, window.innerHeight * dpr / VH));
+    if (s < 1) s = Math.min(window.innerWidth * dpr / VW, window.innerHeight * dpr / VH);
+    canvas.style.width = (VW * s / dpr) + 'px';
+    canvas.style.height = (VH * s / dpr) + 'px';
   }
   window.addEventListener('resize', resize);
+  document.addEventListener('fullscreenchange', resize);
   resize();
 
   var SOLID = { '#': 1, 'B': 1, '?': 1, 'M': 1, 'K': 1, 'C': 1, 'U': 1, 'X': 1, '[': 1, ']': 1, '{': 1, '}': 1 };
@@ -2326,18 +2332,49 @@
   }
 
   // ---------------------------------------------------------------- main loop
-  function toggleFullscreen() {
-    var d = document;
-    if (!d.fullscreenElement) {
-      var el = d.documentElement;
-      if (el.requestFullscreen) { var r = el.requestFullscreen(); if (r && r.catch) r.catch(function () {}); }
-    } else if (d.exitFullscreen) d.exitFullscreen();
+  // Fullscreen, as in smaa-verdener: the first key press or click fills the
+  // screen, and F toggles it. Where the browser supports keyboard lock,
+  // Escape then has to be held to leave fullscreen, so pressing it to pause
+  // does not drop out. ?windowed in the address skips the automatic part.
+  // A controller press cannot start fullscreen; browsers only allow it
+  // after a key press or click.
+  function enterFullscreen() {
+    var el = document.documentElement;
+    if (document.fullscreenElement || !el.requestFullscreen) return;
+    try {
+      var r = el.requestFullscreen({ navigationUI: 'hide' });
+      if (r && r.then) {
+        r.then(function () {
+          if (navigator.keyboard && navigator.keyboard.lock) navigator.keyboard.lock(['Escape']).catch(function () {});
+        }).catch(function () {});
+      }
+    } catch (e) { /* not allowed here; keep playing in the window */ }
   }
+  function toggleFullscreen() {
+    if (document.fullscreenElement) { if (document.exitFullscreen) document.exitFullscreen().catch(function () {}); }
+    else enterFullscreen();
+  }
+  var autoFullscreen = !navigator.webdriver && !/[?&]windowed\b/.test(location.search);
+  function firstGesture() {
+    if (autoFullscreen) enterFullscreen();
+    window.removeEventListener('pointerdown', firstGesture);
+    window.removeEventListener('keydown', firstGesture);
+  }
+  window.addEventListener('pointerdown', firstGesture);
+  window.addEventListener('keydown', firstGesture);
   window.addEventListener('keydown', function (e) {
-    if (e.code === 'KeyF') toggleFullscreen();
+    if (e.code === 'KeyF' && !e.repeat) toggleFullscreen();
     if (e.code === 'KeyM') AU.toggleMusic();
   });
   canvas.addEventListener('dblclick', toggleFullscreen);
+
+  // Hide the mouse pointer while playing with keys or a controller.
+  var idleTimer = 0;
+  window.addEventListener('pointermove', function () {
+    document.body.classList.remove('idle');
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(function () { document.body.classList.add('idle'); }, 2500);
+  });
 
   toTitle();
   var STEP = 1000 / 60, acc = 0, last = performance.now();
