@@ -89,25 +89,25 @@
       // The family. The kids call him Beste, and Tove Farmor.
       var npcs = [
         { look: 'tellef', name: 'TELLEF', x: 24, ball: true, clue: 'EN TUNG RØD KASSE', lines: [
-          'HEI BESTE! SÅ DU AT JEG SCORET? JEG ER KAPTEIN SABELTANN, OG DU ER EN DINOSAUR!',
+          'HEI BESTE! SÅ DU AT JEG SCORA? JEG ER KAPTEIN SABELTANN, OG DU ER EN DINOSAUR!',
           'JEG SÅ EN MANN I FRAKK! HAN GIKK SOM EN T-REX MED EN TUNG RØD KASSE.'
         ] },
         { look: 'fride', name: 'FRIDE', x: 99, lines: [
           'BESTE! JEG HAR BEGYNT PÅ SKOLEN, VISSTE DU DET?',
-          'VI SKAL HA FILMKVELD I KVELD MED FARMOR. DET BLIR EN FILM MED ENHJØRNINGER. DU KAN SITTE VED SIDEN AV MEG.',
-          'MANNEN I FRAKK SA AT DET VAR EN HEMMELIGHET. JEG ER KJEMPEFLINK TIL Å HOLDE HEMMELIGHETER!'
+          'VI SKAL HA FILMKVELD I KVELD MED FARMOR. DET BLIR EN FILM MED ENHJØRNINGER. DU KAN SITTE VED SIA AV MEG.',
+          'MANNEN I FRAKK SA AT DET VAR EN HEMMELIGHED. JEG ER KJEMPEFLINK TE Å HOLDE HEMMELIGHEDER!'
         ] },
         { look: 'kathinka', name: 'KATHINKA', x: 112, lines: [
-          'HEI MAGNE! UNGENE HAR GLEDET SEG HELE UKA.',
-          'IKKE SI NOE TIL NOEN, MEN... NEI, GLEM DET. JEG HAR IKKE SAGT NOE!'
+          'HEI MAGNE! UNGENE HAR GLEDA SEG HELE UGA.',
+          'IKKE SI NOE TE NOEN, MEN... NEI, GLEM DED. JEG HAR IKKE SAGT NOE!'
         ] },
         { look: 'aslak', name: 'ASLAK', x: 127, clue: 'NOE MED ET HELIKOPTER', lines: [
-          'HEI, MAGNE! EN MANN I FRAKK BANKET PÅ HOS OSS I GÅR OG LÅNTE STIGEN.',
-          'HAN SPURTE OM DET VAR LOV Å LANDE ET HELIKOPTER PÅ BLÅBÆRÅSEN. RAR TYPE.'
+          'HEI, MAGNE! EN MANN I FRAKK BANKA PÅ HOS OSS I GÅR OG LÅNTE STIGEN.',
+          'HAN SPURTE OM DET E LOV Å LANDE ET HELIKOPTER PÅ BLÅBÆRÅSEN. RAR TYPE, ALTSÅ.'
         ] },
         { look: 'asta', name: 'ASTA', x: 160, dance: true, lines: [
           'FINN WILLY! FINN WILLY! DANS MED MEG, BESTE!',
-          'MANNEN I FRAKK DANSET OGSÅ. HAN VAR IKKE FLINK.'
+          'MANNEN I FRAKK DANSA OGSÅ. HAN VAR IKKE FLINK.'
         ] },
         // The man in the coat waits at home. He starts talking as soon as
         // Magnio comes close, and then it is time to box.

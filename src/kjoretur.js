@@ -320,7 +320,7 @@
       ctx.fillStyle = 'rgba(12,26,58,0.85)';
       ctx.fillRect(60, 14, VW - 120, 40);
       centered(ctx, 'ENGLEVAKT!', 20, '#c8e4ff', 2);
-      centered(ctx, 'MAGNIO ER HELT USKADD.', 40, '#ffffff');
+      centered(ctx, 'MAGNIO: I HADDE ENGLEVAKT!', 40, '#ffffff');
     }
     if (S.t > 150 && (S.t >> 5) & 1) F.draw(ctx, X, VW - 14, VH - 12, '#ffffff');
   }

@@ -2,6 +2,7 @@
 // houses and Nidarosdomen across the river, past the university and up
 // through Bakklandet, to Lykkens portal at Gamle Bybro, where Tove is waiting.
 // Talking to her ends the level, and she swaps his cigar for boxing gloves.
+// Near the start, the stockbroker outside the exchange runs Trondheim Børs.
 (function () {
   var SM = window.SM = window.SM || {};
   SM.levelDefs = SM.levelDefs || {};
@@ -70,6 +71,10 @@
       row(168, 7, 'oooo');
 
       var npcs = [
+        { look: 'megler', name: 'MEGLEREN', x: 10, game: 'bors', lines: [
+          'MAGNIO! VELKOMMEN TIL TRONDHEIM BØRS. HER LØPER AKSJENE OM KAPP, OG DU KAN SATSE KRONENE DINE.',
+          'JEG HAR ET GODT TIPS: KJØP LAVT OG SELG HØYT. KOM INN!'
+        ] },
         { look: 'student', name: 'STUDENTEN', x: 52, clue: 'SKJEGG UNDER BARTEN', lines: [
           'MANNEN I FRAKK? HAN SPURTE MEG OM VEIEN TIL GAMLE BYBRO.',
           'JEG KUNNE SVERGE PÅ AT HAN HADDE ET HELT ANNET SKJEGG UNDER DEN BARTEN.'
@@ -79,17 +84,17 @@
           'HUN GIKK NED MOT BYBROA. HUN SA HUN SKULLE MØTE NOEN VED LYKKENS PORTAL.'
         ] },
         { look: 'tove', name: 'TOVE', x: 174, ends: true, hearts: true, gives: 'hansker', clue: 'HAN SKAL BYGGE NOE STORT', lines: [
-          'DER ER DU JO, MAGNE!',
+          'DER E DU JO, MAGNE!',
           'EN MANN I FRAKK? HMM... HAN SA HAN SKULLE BYGGE NOE STORT. OG AT HAN TRENGTE VERKTØYKASSA DI.',
-          'OG EN TING TIL: NÅ ER DET SLUTT PÅ SIGARENE. PRØV DISSE BOKSEHANSKENE I STEDET!',
-          'KOM, VI GÅR OVER BROA SAMMEN.'
+          'OG EN TING TE: NÅ E DET SLUTT PÅ SIGARENE. PRØV DISSE BOKSEHANSKENE I STEDEN!',
+          'KOM, SÅ GÅR ME OVER BROA SAMMEN.'
         ] }
       ];
 
       var decor = [
         { kind: 'sign', x: 1, text: 'TRONDHEIM' },
         { kind: 'gull', x: 15, y: 4 }, { kind: 'gull', x: 60, y: 3 }, { kind: 'gull', x: 120, y: 4 }, { kind: 'gull', x: 170, y: 3 },
-        { kind: 'lykt', x: 8 }, { kind: 'lykt', x: 20 }, { kind: 'lykt', x: 36 },
+        { kind: 'bors', x: 5 }, { kind: 'lykt', x: 12 }, { kind: 'lykt', x: 20 }, { kind: 'lykt', x: 36 },
         { kind: 'pullert', x: 12 }, { kind: 'pullert', x: 30 },
         { kind: 'universitet', x: 55 }, { kind: 'sign', x: 49, text: 'UNIVERSITETET' },
         { kind: 'lykt', x: 76 }, { kind: 'lykt', x: 86 },

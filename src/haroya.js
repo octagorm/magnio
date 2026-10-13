@@ -80,19 +80,19 @@
       var npcs = [
         { look: 'fisker', name: 'FISKAREN', x: 8, clue: 'MANN I FRAKK OG HATT', lines: [
           'NEI, SJÅ KVEN SOM ER HEIME ATT! ER DET IKKJE MAGNIO?',
-          'SILDA STÅR SÅ TETT I ÅR AT DU KAN GÅ TØRRSKODD OVER SUNDET.',
+          'I HAR ALDRI SETT MAKEN: SILDA STÅR SÅ TETT AT DU KAN GÅ TØRRSKODD OVER SUNDET.',
           'FORRESTEN: EIN FRAMAND MANN I LANG FRAKK OG HATT KOM MED MORGONBÅTEN. HAN BAR PÅ EI TUNG RAUD KASSE.'
         ] },
         { look: 'kone', name: 'KONA VED KYRKJA', x: 58, clue: 'BARTEN VAR LIMT PÅ', lines: [
           'MAGNIO! SÅ STOR DU HAR VORTE.',
           'PASS DEG FOR MÅSANE. DEI STEL ALT SOM GLINSAR.',
-          'MANNEN I FRAKKEN? HAN HADDE MØRKE BRILLER, OG BARTEN HANS SÅG UT TIL Å VERE LIMT PÅ.'
+          'MANNEN I FRAKKEN? I SÅG HAN SJØLV. HAN HADDE MØRKE BRILLER, OG BARTEN SÅG UT TIL Å VERE LIMT PÅ.'
         ] },
         { look: 'bil', name: 'BILEN', x: 104, still: true, game: 'drive', lines: [
           'EIN RAUD STASJONSVOGN MED NØKKELEN I TENNINGA. KANSKJE EIN TUR RUNDT ØYA?'
         ] },
         { look: 'hvalfanger', name: 'HVALFANGAREN', x: 147, lines: [
-          'HAN I FRAKKEN VILLE BLI MED HVALBÅTEN. EG SA NEI.',
+          'HAN I FRAKKEN VILLE BLI MED HVALBÅTEN. I SA NEI.',
           'SÅ GJEKK HAN UT PÅ ENDEN AV KAIA OG VINKA PÅ NOKO UTE PÅ SJØEN...',
           'VER FORSIKTIG DER UTE. DET HAR GÅTT EIN KJEMPEKVAL INNANFOR SKJERA HEILE DAGEN.'
         ] }

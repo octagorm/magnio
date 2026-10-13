@@ -19,7 +19,25 @@ spor i saken. (Det er Gorm i forkledning. Han trengte verktøyet til en statue.)
 3. **Trondheim**: bryggene og Nidarosdomen over elva, universitetet,
    Bakklandet og Lykkens portal, der Tove venter. Hun gir ham boksehansker i
    stedet for sigaren, og brettet slutter når man har pratet med henne.
-4. **Heim**: hytta, og to turer over fjorden med sjekta mens makrellen hopper.
+   Rett i starten står megleren utenfor Børsen. Snakker man med ham, blir det
+   Trondheim Børs: seks rare aksjeselskaper løper om kapp, og Magnio satser
+   kronene sine på ett av dem (opp og ned velger selskap, venstre og høyre
+   beløp, ✕ satser og □ går ut). Kommentatoren roper underveis, og hver
+   tredje runde kommer et sjansekort som i Monopol. Han vinner oftere enn
+   han taper, og banken låner ham penger hvis han går tom.
+4. **Heim**: fra parkeringsplassen, forbi hytta og ned til brygga, og over
+   fjorden med sjekta mens makrellen hopper. Tove går bak Magnio forbi
+   hytta, og så løper hun i forveien ned til brygga og fisker. Første fisk
+   kommer fort, og hver fisk fyker over hodet hennes og lander på sløyebordet
+   bak henne (opptil tre). Trykker man på bordet, sløyer Magnio den første:
+   hold høyre for å skjære opp buken, ✕ tre ganger for innvollene (måken tar
+   den siste) og ✕ for å skylle. Furuene kan felles med
+   boksehanskene («TØMMER!»), og hvert tre gir 5 kr. Hun får mest hyse, men
+   også makrell, torsk, sei og lyr.
+   På bordet ved hytta står Catan. Det spilles ikke helt, bare om lengste vei:
+   Magnio, Tove og en mystisk tredjeperson bygger én vei hver etter tur i åtte
+   runder (pilene velger sted og ✕ bygger), og den lengste veien vinner. Blir
+   det uavgjort, vinner bursdagsbarnet.
 5. **Værnes**: flyplassen. Ved gatene velger man Moraira, Praha eller Lillesand
    (trykk opp eller △). Moraira og Praha er valgfrie sideturer der
    leietakerne betaler husleie. Lillesand fører historien videre.
@@ -99,6 +117,16 @@ ham hvis han blir hengende etter.
 - Ett skjult felt har en pengesekk, og én trekasse er full av mynter.
 - Brettet slutter ved flaggstanga hans. Flagget heises når han kommer hjem.
 
+## Hvem snakker hvordan
+
+Replikkene skal høres ut som folk faktisk snakker:
+
+- Magne sier «i» for «jeg», og det gjør de andre på Harøya også.
+- Tove og Aslak snakker stavangersk: «eg», «me», «e» og «te», bløte konsonanter
+  og presens uten -r («makrellen bide godt», «eg håbe»). Ikke for nynorsk.
+- Kathinka snakker kristiansandsk, med bløte konsonanter («uga», «ded»).
+- Barna snakker en blanding av kristiansandsk og østlandsk.
+
 ## Litt snillere enn originalen
 
 Spillet er justert til å være rausere enn Mario, uten at det står noe om det
@@ -125,7 +153,8 @@ Tallene står øverst i `src/game.js`.
 - `src/audio.js` har lydeffektene og bakgrunnsmusikken, som er en egen melodi.
 - `src/input.js` håndterer tastatur og kontroller.
 - `src/game.js` har fysikken, fiendene, historien, kartet og tegningen.
-- `src/kjoretur.js` har kjøreturen på Harøya.
+- `src/kjoretur.js` har kjøreturen på Harøya, `src/borsen.js` Trondheim Børs,
+  `src/catan.js` Catan på Heim og `src/sloying.js` sløyingen av fisken.
 - `src/kake.js` har kakescenen etter rulleteksten, og `src/fest.js` dansen
   etter den.
 - `IDEER.md` samler idéer til flere minispill.

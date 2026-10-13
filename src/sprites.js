@@ -2104,6 +2104,67 @@
   var car = { side: carSide(), top: carTop() };
   car.sideL = mirror(car.side);
   npc.bil = { r: car.side, l: car.sideL };
+  decor.bil = car.side; // parked at Heim
+
+  // The Catan box on a little table outside the cabin at Heim.
+  function catanTable() {
+    var c = mk(26, 20), g = c.getContext('2d');
+    rect(g, 0, 11, 26, 3, '#8a5a30'); rect(g, 0, 11, 26, 1, '#b07a44');
+    rect(g, 2, 14, 2, 6, '#6a4220'); rect(g, 22, 14, 2, 6, '#6a4220');
+    rect(g, 4, 4, 18, 7, '#7a2410'); rect(g, 5, 4, 16, 6, '#d84a1c');
+    rect(g, 5, 8, 16, 2, '#2a6ab0');                                      // the sea on the lid
+    var hexes = [[8, '#2e7a32'], [12, '#e8c040'], [16, '#8a8a96']];
+    for (var i = 0; i < hexes.length; i++) { rect(g, hexes[i][0], 5, 3, 3, hexes[i][1]); rect(g, hexes[i][0] + 1, 4, 1, 1, hexes[i][1]); }
+    return c;
+  }
+  var catan = catanTable();
+  npc.catan = { r: catan, l: catan };
+
+  // The gutting table on the jetty at Heim, where Tove's catch lands.
+  function gutTable() {
+    var c = mk(36, 14), g = c.getContext('2d');
+    rect(g, 0, 0, 36, 3, '#9a6a3c'); rect(g, 0, 0, 36, 1, '#c08a50');
+    rect(g, 2, 3, 3, 11, '#6a4220'); rect(g, 31, 3, 3, 11, '#6a4220');
+    rect(g, 5, 8, 26, 2, '#7a4e28');
+    return c;
+  }
+  var gut = gutTable();
+  npc.sloyebord = { r: gut, l: gut };
+
+  // ================================================================ Trondheim Børs
+  // The stockbroker outside the exchange: slicked hair, a navy suit and a red tie.
+  var SUIT_TOP = [
+    '.....CCWWCC.....', '....CCCWRWCC....', '...CCCCWRWCCC...', '...CCCCCRCCCC...',
+    '...CCCCCRCCCC...', '...CC.CCRC.CC...'
+  ];
+  npc.megler = pair(HEADS.hair.concat(SUIT_TOP, BODIES.plain.slice(SUIT_TOP.length)),
+    { S: '#f8c088', P: '#e8946a', K: '#141414', H: '#1a1410', C: '#2a3450', W: '#f4f4f4', R: '#c8281c', L: '#2a3450', N: '#141414' },
+    'npc megler');
+
+  // The exchange: a pale stone front with columns and BØRS over the door.
+  function exchange() {
+    var w = 72, h = 84, c = mk(w, h), g = c.getContext('2d');
+    var stone = '#d8d0c0', shade = '#b8b0a0', dark = '#5a5048';
+    rect(g, 2, 26, w - 4, h - 26, stone);
+    for (var s = 0; s < 14; s++) rect(g, 36 - Math.round(s * 34 / 14), 10 + s, Math.round(s * 68 / 14) + 1, 1, s === 13 ? shade : stone); // pediment
+    rect(g, 0, 24, w, 3, shade);
+    disc(g, 36, 18, 3, 3, '#e8c040');                                              // a gold coin in the gable
+    rect(g, 35, 17, 2, 2, '#b08810');
+    for (var x = 8; x < w - 8; x += 12) {                                          // columns
+      rect(g, x, 30, 6, h - 36, '#ece6d8');
+      rect(g, x + 4, 30, 2, h - 36, shade);
+      rect(g, x - 1, 29, 8, 2, shade); rect(g, x - 1, h - 7, 8, 2, shade);
+    }
+    rect(g, 28, 50, 16, 28, dark);                                                 // the door
+    disc(g, 36, 50, 8, 6, dark);
+    rect(g, 35, 52, 2, 26, '#3a3028');
+    rect(g, 0, h - 5, w, 5, shade);                                                // steps
+    rect(g, 4, h - 3, w - 8, 3, '#c8c0b0');
+    rect(g, 20, 32, 32, 11, '#2a3450');
+    SM.font.draw(g, 'BØRS', 25, 34, '#f0d040');
+    return c;
+  }
+  decor.bors = exchange();
 
   // The statue: Magne riding a whale, with a mullet, raising a boxing glove.
   function statue() {

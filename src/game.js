@@ -97,7 +97,7 @@
     leftP: false, rightP: false, upP: false, downP: false, jumpP: false, fireP: false, startP: false, anyP: false };
 
   var G = {
-    state: 'title', t: 0, L: null, levelId: 'haroya', boats: [], gate: null, players: [], enemies: [], npcs: [], items: [], shots: [],
+    state: 'title', t: 0, L: null, levelId: 'haroya', boats: [], gate: null, players: [], enemies: [], npcs: [], trees: [], items: [], shots: [],
     parts: [], texts: [], bumps: [], camX: 0, freeze: 0, end: null, paused: false, coinHits: {},
     flagY: FLAG_LOW, intro: 0, talk: null, near: null, story: null, mapSel: 0, fade: 0, p2Device: null,
     save: null
@@ -538,6 +538,17 @@
         var e = G.enemies[j];
         if (alive(e) && ov(s, e)) { killEnemy(e, s.vx > 0 ? 1 : -1); puff(s.x + 4, s.y + 4, 4); s.dead = true; break; }
       }
+      if (s.punch && !s.dead) {
+        for (j = 0; j < G.trees.length; j++) {
+          var tr = G.trees[j];
+          if (tr.state === 'stand' && ov(s, { x: tr.x + 14, y: GROUND_Y - 48, w: 12, h: 48 })) {
+            fellTree(tr, s.vx > 0 ? 1 : -1, s.owner);
+            puff(s.x + 4, s.y + 4, 4);
+            s.dead = true;
+            break;
+          }
+        }
+      }
     }
     G.shots = G.shots.filter(function (s) { return !s.dead; });
   }
@@ -763,37 +774,183 @@
     }
   }
 
+  // ---------------------------------------------------------------- trees
+  // Some pines can be felled with a punch from the boxing gloves. They tip
+  // over slowly, then faster, land with a thump, and give a few coins of
+  // firewood money.
+  function fellTree(tr, dir, p) {
+    tr.state = 'fall'; tr.dir = dir; tr.t = 0; tr.by = p;
+    AU.sfx('brk');
+    addText(tr.x + 20, GROUND_Y - 60, 'TØMMER!', '#ffe060');
+  }
+
+  function updateTrees() {
+    for (var i = 0; i < G.trees.length; i++) {
+      var tr = G.trees[i];
+      if (tr.state !== 'fall') continue;
+      tr.t++;
+      tr.ang += tr.dir * (0.01 + tr.t * 0.0025);
+      if (Math.abs(tr.ang) >= Math.PI / 2) {
+        tr.ang = tr.dir * Math.PI / 2;
+        tr.state = 'down';
+        AU.sfx('boom');
+        var h = A.decor[tr.kind].height;
+        for (var k = 0; k < 5; k++) puff(tr.x + 20 + tr.dir * (h * (0.3 + k * 0.15)), GROUND_Y - 4, 4);
+        var p = tr.by || G.players[0];
+        if (p) {
+          p.coins += 5;
+          addText(tr.x + 20 + tr.dir * h * 0.5, GROUND_Y - 24, '+5 KR', '#ffe060');
+          AU.sfx('coin');
+        }
+      }
+    }
+  }
+
+  function drawTrees(cx) {
+    for (var i = 0; i < G.trees.length; i++) {
+      var tr = G.trees[i], img = A.decor[tr.kind], x = Math.round(tr.x - cx);
+      if (x > VW + img.height || x + img.width < -img.height) continue;
+      if (!tr.ang) { ctx.drawImage(img, x, GROUND_Y - img.height + OFFY); continue; }
+      // pivot at the foot of the trunk; lying flat it is a whole quarter turn, so the pixels stay square
+      ctx.save();
+      ctx.translate(x + 20, GROUND_Y + OFFY);
+      ctx.rotate(tr.ang);
+      ctx.drawImage(img, -20, -img.height);
+      ctx.restore();
+      if (tr.state === 'down') { ctx.fillStyle = '#a85a30'; ctx.fillRect(x + 18, GROUND_Y + OFFY - 3, 5, 3); } // the stump
+    }
+  }
+
+  // Someone fishing off the end of the jetty: a rod, a line and a float
+  // that bobs, and now and then dips when something bites. What comes up is
+  // a bit random, but haddock most often, since that was Tove's favourite.
+  var CATCH = [['HYSE', 40], ['MAKRELL', 20], ['TORSK', 15], ['SEI', 15], ['LYR', 10]];
+  function pickCatch() {
+    var r = Math.random() * 100;
+    for (var i = 0; i < CATCH.length; i++) { r -= CATCH[i][1]; if (r < 0) return CATCH[i][0]; }
+    return CATCH[0][0];
+  }
+
+  // The table the catch lands on: the 'sloye' thing in the level.
+  function fishTable() {
+    for (var i = 0; i < G.npcs.length; i++) if (G.npcs[i].game === 'sloye') return G.npcs[i];
+    return null;
+  }
+
+  // While fishing: the first bite comes quickly, then one every eight
+  // seconds or so. The fish flies straight up onto the table behind her.
+  function stepFishing(n) {
+    n.fishT++;
+    if (n.fishT === n.nextBite) {
+      n.caught = pickCatch();
+      n.catchT = 0;
+      n.nextBite = n.fishT + 420 + Math.floor(Math.random() * 240);
+      addText(n.x + 30, n.y - 6, n.caught + '!', '#c0e0ff');
+      AU.sfx('splash');
+    }
+    if (n.catchT >= 0 && ++n.catchT > 40) {
+      n.catchT = -1;
+      var table = fishTable();
+      if (table && table.table.length < 3) table.table.push(n.caught);
+      AU.sfx('stomp');
+    }
+  }
+
+  function drawFishing(cx) {
+    for (var i = 0; i < G.npcs.length; i++) {
+      var n = G.npcs[i];
+      if (!n.fishing) continue;
+      var x = Math.round(n.x - cx), y = n.y + OFFY;
+      if (x < -60 || x > VW) continue;
+      var hx = x + 12, hy = y + 15, tx = x + 30, ty = y - 3;
+      ctx.fillStyle = '#6a4a2a';
+      for (var k = 0; k <= 18; k++) ctx.fillRect(Math.round(hx + (tx - hx) * k / 18), Math.round(hy + (ty - hy) * k / 18), 1, 1);
+      var bite = n.nextBite - n.fishT < 30, fx = x + 44, fy = GROUND_Y + 6 + OFFY - 2 + (bite ? 3 : Math.round(Math.sin(G.t / 20)));
+      ctx.fillStyle = '#d8d8d8';
+      for (k = 0; k <= 14; k++) ctx.fillRect(Math.round(tx + (fx + 1 - tx) * k / 14), Math.round(ty + (fy - ty) * k / 14), 1, 1);
+      ctx.fillStyle = '#e03020'; ctx.fillRect(fx, fy, 3, 2);
+      ctx.fillStyle = '#f4f4f4'; ctx.fillRect(fx, fy + 2, 3, 2);
+      // the catch, flying over her head onto the table
+      var table = fishTable();
+      if (n.catchT >= 0 && table) {
+        var u = n.catchT / 40, ex = Math.round(table.x - cx) + 1, ey = table.y + OFFY - 10;
+        var sx = fx - 16 + (ex - (fx - 16)) * u, sy = fy - 8 + (ey - (fy - 8)) * u - Math.sin(Math.PI * u) * 40;
+        ctx.drawImage(SM.gut.fishArt(n.caught), Math.round(sx), Math.round(sy));
+      }
+    }
+  }
+
+
   // ---------------------------------------------------------------- people
   // dance: hops and turns. ball: has a football at his feet. ends: talking to
   // this person finishes the level. game: talking starts a minigame, and the
   // level carries on afterwards. still: a thing rather than a person, which
-  // does not turn to face you.
+  // does not turn to face you. follow: walks along behind Magnio as far as
+  // that column, and once he has gone on past it, stays there and fishes
+  // (and then says fishLines instead of lines). runAt: once Magnio is past
+  // that column, she runs on ahead to her fishing spot.
   function makeNpc(n) {
     var spr = A.npc[n.look].r;
     return { look: n.look, name: n.name, lines: n.lines, clue: n.clue, dance: n.dance, ball: n.ball, ends: n.ends,
       hearts: n.hearts, gives: n.gives, pays: n.pays, auto: n.auto, game: n.game, still: n.still,
+      follow: n.follow ? n.follow * TS : 0, runAt: n.runAt ? n.runAt * TS : 0, running: false,
+      fishT: 0, nextBite: 90, catchT: -1, table: [],
+      fishLines: n.fishLines, fishing: false, walking: false, faceLeft: false,
       x: n.x * TS, y: ((n.y || 11) + 1) * TS - spr.height, w: spr.width, h: spr.height };
   }
 
+  // Followers keep a little behind Magnio, walking along the ground.
+  function updateNpcs() {
+    var p = G.players[0];
+    for (var i = 0; i < G.npcs.length; i++) {
+      var n = G.npcs[i];
+      n.walking = false;
+      if (n.fishing) { stepFishing(n); continue; }
+      if (!n.follow || !p || p.state !== 'play') continue;
+      if (n.runAt && !n.running && p.x > n.runAt) {
+        n.running = true;
+        addText(n.x + 8, n.y - 8, 'EG GÅR OG FISKE!', '#c0e0ff');
+      }
+      var target = n.running ? n.follow : Math.max(0, Math.min(n.follow, p.x - 22)), dx = target - n.x;
+      if (Math.abs(dx) > 3) {
+        n.x += Math.sign(dx) * (n.running ? 2.4 : Math.min(1.6, 0.5 + Math.abs(dx) * 0.05));
+        n.walking = true;
+        n.faceLeft = dx < 0;
+      } else {
+        n.faceLeft = p.x + p.w / 2 < n.x + 8;
+      }
+      if ((n.running || p.x > n.follow + 3 * TS) && Math.abs(n.x - n.follow) <= 4) { n.x = n.follow; n.fishing = true; n.faceLeft = false; }
+    }
+  }
+
+  // Whoever is within reach. Something that starts a minigame wins over a
+  // person standing next to it (Tove walks right up to the Catan table),
+  // and otherwise the nearest one does.
   function findNear() {
     G.near = null;
+    var best = Infinity;
     for (var i = 0; i < G.players.length; i++) {
       var p = G.players[i];
       if (p.state !== 'play' || !p.onGround) continue;
       for (var j = 0; j < G.npcs.length; j++) {
-        var n = G.npcs[j];
-        if (Math.abs(p.x + p.w / 2 - (n.x + n.w / 2)) < 20 + n.w / 2 && p.y + p.h > n.y && p.y < n.y + n.h) {
-          G.near = { npc: n, player: p };
-          return;
+        var n = G.npcs[j], d = Math.abs(p.x + p.w / 2 - (n.x + n.w / 2));
+        if (d < 20 + n.w / 2 && p.y + p.h > n.y && p.y < n.y + n.h) {
+          var score = n.game && (n.game !== 'sloye' || n.table.length) ? d - 1000 : d;
+          if (score < best) { best = score; G.near = { npc: n, player: p }; }
         }
       }
     }
   }
 
   function startTalk(n) {
-    var pages = n.lines.slice();
+    if (n.game === 'sloye' && n.table.length) {
+      // a fish on the table: straight to gutting it
+      startMinigame('sloye', { fish: n.table.shift() });
+      return;
+    }
+    var pages = (n.fishing && n.fishLines ? n.fishLines : n.lines).slice(), game = n.game === 'sloye' ? null : n.game;
     if (n.clue && G.save.clues.indexOf(n.clue) < 0) pages.push('NYTT SPOR: ' + n.clue);
-    G.talk = { npc: n, pages: pages, page: 0, t: 0 };
+    G.talk = { npc: n, pages: pages, page: 0, t: 0, game: game };
     AU.sfx('talk');
   }
 
@@ -829,7 +986,7 @@
         }
         if (T.npc.ends === 'box') startBox();
         else if (T.npc.ends) startTalkEnd(T.npc);
-        else if (T.npc.game === 'drive') startDrive();
+        else if (T.game) startMinigame(T.game);
       }
     }
   }
@@ -1253,15 +1410,29 @@
 
   // After the credits, as in the films: Magne helps himself to cake (src/kake.js),
   // and then everyone dances (src/fest.js).
-  // The drive round Harøya (src/kjoretur.js), from the red car. Afterwards
-  // the level carries on where it was.
-  function startDrive() {
-    G.state = 'drive';
-    SM.drive.start({ pressed: anyPressed, big: G.players[0].power > 0, done: function () {
-      G.state = 'play';
-      for (var i = 0; i < G.players.length; i++) G.players[i].jumpBuf = 0;
-      AU.startMusic(G.L.music || 'main');
-    } });
+  // Minigames started by talking to someone in a level (game: in the level
+  // file): the drive round Harøya (src/kjoretur.js), Trondheim Børs
+  // (src/borsen.js), Catan at Heim (src/catan.js), and gutting Tove's catch
+  // on the jetty at Heim (src/sloying.js). Afterwards the level carries on
+  // where it was.
+  var MINIGAMES = { drive: 'drive', bors: 'stock', catan: 'catan', sloye: 'gut' };
+  function startMinigame(name, extra) {
+    var p1 = G.players[0];
+    G.state = 'minigame';
+    G.minigame = SM[MINIGAMES[name]];
+    G.minigame.start({
+      pressed: anyPressed,
+      fish: extra && extra.fish,
+      big: p1.power > 0,
+      coins: function () { return p1.coins; },
+      setCoins: function (n) { p1.coins = n; },
+      done: function () {
+        G.state = 'play';
+        G.minigame = null;
+        for (var i = 0; i < G.players.length; i++) G.players[i].jumpBuf = 0;
+        AU.startMusic(G.L.music || 'main');
+      }
+    });
   }
 
   function startCake() {
@@ -1493,6 +1664,7 @@
       return !stuck;
     }).map(function (e) { return makeEnemy(e.type, e.x, e.y); });
     G.npcs = (L.npcs || []).map(makeNpc);
+    G.trees = (L.trees || []).map(function (t) { return { x: t.x * TS, kind: t.kind || 'pine', state: 'stand', ang: 0, dir: 1, t: 0 }; });
     G.boats = (L.boats || []).map(function (b) {
       return { x: b.from * TS, x0: b.from * TS, x1: b.to * TS, y: GROUND_Y + 2, w: 58, dir: 1, wait: 60, dx: 0 };
     });
@@ -1655,6 +1827,8 @@
     updateItems();
     updateEnemies();
     updateShots();
+    updateTrees();
+    updateNpcs();
     if (!G.end) { collidePlayers(); checkEnding(); }
 
     if (G.L.bubbles && G.t % 18 === 0) {
@@ -1686,7 +1860,7 @@
     else if (G.state === 'box') stepBox();
     else if (G.state === 'credits') stepCredits();
     else if (G.state === 'cake') SM.cake.step();
-    else if (G.state === 'drive') SM.drive.step();
+    else if (G.state === 'minigame') G.minigame.step();
     else if (G.state === 'party') SM.party.step();
   }
 
@@ -1945,11 +2119,13 @@
     if (x < -n.w - 4 || x > VW + 4) return;
     var p1 = G.players[0];
     var faceLeft = !n.still && p1 && p1.x + p1.w / 2 < n.x + 8, hop = 0;
+    if (n.follow) { faceLeft = n.faceLeft; hop = n.walking ? (G.t >> (n.running ? 2 : 3)) & 1 : 0; }
     if (n.dance) {
       faceLeft = Math.floor(G.t / 20) % 2 === 0;
       hop = Math.abs(Math.round(Math.sin(G.t / 6) * 3));
     }
     ctx.drawImage(faceLeft ? A.npc[n.look].l : A.npc[n.look].r, x, n.y + OFFY - hop);
+    for (var f = 0; f < n.table.length; f++) ctx.drawImage(SM.gut.fishArt(n.table[f]), x + 1 + f * 2, n.y + OFFY - 10 - f * 3);
     if (n.ball) {
       var by = GROUND_Y - 6 + OFFY - Math.abs(Math.round(Math.sin(G.t / 9) * 10));
       A.disc(ctx, x + 18, by, 3, 3, '#141414');
@@ -2144,6 +2320,7 @@
     drawBackdrop(cx);
     drawDecor(cx, 'back');
     drawDecor(cx, 'front');
+    drawTrees(cx);
     if (L.ending.flagX) drawPoleAndFlag(cx);
     if (L.ending.type === 'spout') drawSpout(cx);
     drawGates(cx);
@@ -2167,6 +2344,7 @@
       ctx.globalAlpha = 1;
     }
     drawWater(cx);
+    drawFishing(cx);
     for (i = 0; i < G.boats.length; i++) ctx.drawImage(A.decor.sjekte, Math.round(G.boats[i].x - 3 - cx), G.boats[i].y - 4 + OFFY);
     for (i = 0; i < G.players.length; i++) if (G.players[i].boat) drawPlayer(G.players[i], cx);
     drawParts(cx);
@@ -2346,7 +2524,7 @@
     if (G.state === 'box') { drawRingScene(); return; }
     if (G.state === 'credits') { drawCredits(); return; }
     if (G.state === 'cake') { SM.cake.draw(ctx); return; }
-    if (G.state === 'drive') { SM.drive.draw(ctx); return; }
+    if (G.state === 'minigame') { G.minigame.draw(ctx); return; }
     if (G.state === 'party') { SM.party.draw(ctx); return; }
     if (G.end && G.end.type === 'fly' && G.fade >= 1) { drawFlight(); return; }
     if (G.end && G.end.type === 'spout' && (G.end.phase === 'flash' || G.end.phase === 'clear')) drawOutside();
@@ -2386,6 +2564,23 @@
     return s;
   }
 
+  // Start a level beside whoever starts the minigame, and start it, so the
+  // level carries on from there afterwards.
+  function atMinigame(level, game) {
+    var who = (levelDef(level).build().npcs || []).filter(function (n) { return n.game === game; })[0];
+    G.save = finishedSave();
+    if (who && !startCol) startCol = who.x - 1;
+    startLevel(level, 'kb1');
+    G.intro = 0;
+    // anyone who walks along with Magnio (Tove at Heim) has come with him
+    var p = G.players[0];
+    for (var i = 0; i < G.npcs.length; i++) {
+      var n = G.npcs[i];
+      if (n.follow) n.x = Math.max(0, Math.min(n.follow, p.x - 22));
+    }
+    startMinigame(game);
+  }
+
   function atLillesandEnd() {
     G.save = finishedSave();
     startLevel('lillesand', 'kb1');
@@ -2405,14 +2600,20 @@
       startLevel(id, 'kb1');
     }]);
     if (id === 'haroya') {
-      SHORTCUTS.push(['kjoretur', 'Kjøreturen på Harøya', function () {
-        // start beside the car, so the level carries on from there afterwards
-        var car = (levelDef('haroya').build().npcs || []).filter(function (n) { return n.game === 'drive'; })[0];
+      SHORTCUTS.push(['kjoretur', 'Kjøreturen på Harøya', function () { atMinigame('haroya', 'drive'); }]);
+    }
+    if (id === 'trondheim') {
+      SHORTCUTS.push(['borsen', 'Børsen i Trondheim', function () { atMinigame('trondheim', 'bors'); }]);
+    }
+    if (id === 'heim') {
+      SHORTCUTS.push(['catan', 'Catan på Heim', function () { atMinigame('heim', 'catan'); }]);
+      SHORTCUTS.push(['sloying', 'Sløying av fisk på Heim', function () {
         G.save = finishedSave();
-        if (car && !startCol) startCol = car.x - 1;
-        startLevel('haroya', 'kb1');
+        if (!startCol) startCol = 45;
+        startLevel('heim', 'kb1');
         G.intro = 0;
-        startDrive();
+        for (var i = 0; i < G.npcs.length; i++) if (G.npcs[i].follow) { G.npcs[i].x = G.npcs[i].follow; G.npcs[i].fishing = true; }
+        startMinigame('sloye', { fish: pickCatch() });
       }]);
     }
   });
