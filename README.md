@@ -133,7 +133,9 @@ Spillet er justert til å være rausere enn Mario, uten at det står noe om det
 i selve spillet:
 
 - Ingen klokke, ingen liv og ingen «game over».
-- Faller man i vannet, kommer man opp igjen på siste trygge sted.
+- Faller man i vannet, kommer man opp igjen på siste trygge sted, men mister
+  ett trinn, som når man blir truffet: sigaren eller hanskene, så sjokoladen,
+  og som liten opptil 5 kr. Ellers ville ikke power-ups betydd noe.
 - Blir man truffet som liten, mister man opptil 5 kr og blir dyttet litt bakover.
 - Et hopp virker en liten stund etter at man har gått utfor en kant, og et
   hopp som trykkes litt for tidlig, blir husket.

@@ -2,7 +2,8 @@
 //
 // Forgiving by design, without saying so on screen:
 // - there is no timer, no lives and no game over
-// - falling into water (or stomach acid) puts you back on the last safe ground
+// - falling into water (or stomach acid) puts you back on the last safe ground,
+//   though it costs a step, like being hit, so power-ups still matter
 // - getting hit when small knocks you back and costs a few coins, nothing more
 // - jumps still work for a moment after walking off a ledge (coyote time),
 //   and a jump pressed a little early is remembered (jump buffer)
@@ -582,6 +583,18 @@
 
   function hurt(p, e) {
     if (p.inv > 0 || p.star > 0 || p.state !== 'play') return;
+    if (!losePower(p)) {
+      var dir = e && e.x > p.x ? -1 : 1;
+      p.vx = dir * 1.5;
+      p.vy = -3;
+      p.inv = 120;
+      AU.sfx('hurt');
+    }
+  }
+
+  // Losing one step: the cigar or the gloves first, then the chocolate, and
+  // when there is nothing left, up to 5 kr. Returns false when it was coins.
+  function losePower(p) {
     if (p.power === 2) {
       p.power = 1;
       p.inv = 120;
@@ -602,12 +615,9 @@
         part({ kind: 'coin', x: p.x, y: p.y - 8, vx: (Math.random() - 0.5) * 3, vy: -3 - Math.random() * 2, g: 0.2, life: 40 });
       }
       addText(p.x + 6, p.y - 10, lost ? '-' + lost + ' KR' : 'AU!', '#ff8080');
-      var dir = e && e.x > p.x ? -1 : 1;
-      p.vx = dir * 1.5;
-      p.vy = -3;
-      p.inv = 120;
-      AU.sfx('hurt');
+      return false;
     }
+    return true;
   }
 
   // Open ground at or to the left of column tx, two tiles wide.
@@ -648,6 +658,9 @@
     p.state = 'play';
     p.inv = 100;
     puff(p.x + p.w / 2, p.y + p.h / 2, 8);
+    // a dip in the sea costs a step, just like being hit
+    if (!losePower(p)) AU.sfx('hurt');
+    p.inv = Math.max(p.inv, 100);
   }
 
   function updatePlayer(p, inp) {

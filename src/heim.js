@@ -45,10 +45,10 @@
       row(56, 6, 'ooo'); row(64, 6, 'ooo');
 
       // --- The headland
-      row(78, 8, '?K?');
+      row(78, 8, '?M?');   // the gloves again, if the fjord took them
       enemy('krabbe', 82, 11);
       column(88, 3);
-      row(94, 8, 'BB?BB');
+      row(94, 8, 'BBMBB');
       enemy('bill', 100, 11); enemy('bill', 102, 11);
       set(106, 8, 'h');
       column(110, 2);
