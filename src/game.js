@@ -37,11 +37,15 @@
   var SIDE = ['moraira', 'praha'];
   var MAPLIST = ['haroya', 'hvalen', 'trondheim', 'heim', 'varnes', 'moraira', 'praha', 'lillesand'];
 
+  // The pictures (except Magnio himself) are drawn by src/album.js: the
+  // toolbox is gone, and in its place is a photo album he steps into.
   var PROLOGUE = [
     { art: 'magnio', text: 'DET ER EN HELT SPESIELL DAG FOR MAGNIO.' },
-    { art: 'kasse', text: 'MEN I NATT FORSVANT DEN RØDE VERKTØYKASSA HANS!' },
+    { art: 'tom', text: 'MEN I NATT FORSVANT DEN RØDE VERKTØYKASSA HANS!' },
     { art: 'skurk', text: 'NOEN SÅ EN MYSTISK MANN I FRAKK OG HATT LUSKE AV GÅRDE MED DEN.' },
-    { art: null, text: 'SPORENE PEKER MOT HARØYA, DER MAGNIO VOKSTE OPP.' }
+    { art: 'album', text: 'DER KASSA STO, LIGGER BARE ET GAMMELT FOTOALBUM.' },
+    { art: 'side', text: 'PÅ FØRSTE SIDE: HARØYA. OG I KANTEN AV BILDET, EN MANN I FRAKK OG HATT...' },
+    { art: 'inn', text: 'MAGNIO SER NÆRMERE ETTER, OG PLUTSELIG STÅR HAN I BILDET.' }
   ];
 
   // What each part of a level looks like in the background, and what fills its gaps.
@@ -1377,7 +1381,8 @@
   var GORM_LINES = [
     'AU! FOR EN HØYRE, MAGNIO!',
     'JA, DET VAR MEG HELE TIDEN. GORM, I FORKLEDNING.',
-    'JEG LÅNTE VERKTØYKASSA DI FOR Å LAGE EN GAVE TIL DEG. HER HAR DU DEN TILBAKE.',
+    'ALBUMET LA JEG DER, SÅ DU SKULLE FÅ GÅ GJENNOM HELE LIVET DITT PÅ BURSDAGEN DIN.',
+    'OG VERKTØYKASSA LÅNTE JEG FOR Å LAGE EN GAVE TIL DEG. HER HAR DU DEN TILBAKE.',
     'MEN GAVEN KAN JEG IKKE BÆRE ALENE. SE OPP!'
   ];
   var CREDITS = [
@@ -1845,6 +1850,50 @@
     G.talk = null; G.near = null; G.fade = 0;
   }
 
+  // The pause menu: up and down move the pointer, ✕ picks, □ goes a step
+  // back. Starting over asks first, with NO picked to begin with.
+  var PAUSE_MENU = ['videre', 'kart', 'musikk', 'nytt'];
+  function stepPause(d) {
+    var n = G.confirmReset ? 2 : PAUSE_MENU.length;
+    if (d.upP || d.downP) {
+      if (G.confirmReset) G.confirmSel = (G.confirmSel + (d.downP ? 1 : n - 1)) % n;
+      else G.pauseSel = (G.pauseSel + (d.downP ? 1 : n - 1)) % n;
+      AU.sfx('talk');
+      return;
+    }
+    if (d.fireP) {
+      if (G.confirmReset) G.confirmReset = false;
+      else { G.paused = false; AU.setPaused(false); }
+      AU.sfx('talk');
+      return;
+    }
+    if (!d.jumpP) return;
+    if (G.confirmReset) {
+      if (G.confirmSel === 1) restartGame();
+      else { G.confirmReset = false; AU.sfx('talk'); }
+      return;
+    }
+    var pick = PAUSE_MENU[G.pauseSel];
+    if (pick === 'videre') { G.paused = false; AU.setPaused(false); AU.sfx('pause'); }
+    else if (pick === 'kart') { G.paused = false; AU.setPaused(false); toMap(G.levelId); }
+    else if (pick === 'musikk') { AU.toggleMusic(); AU.sfx('talk'); }
+    else { G.confirmReset = true; G.confirmSel = 0; AU.sfx('talk'); }
+  }
+
+  // From the pause menu, once confirmed: everything is forgotten (levels,
+  // kroner, clues, the prologue), and the game starts again from the title,
+  // as the first time. The same as ?ny in the address.
+  function restartGame() {
+    G.save = freshSave();
+    writeSave();
+    G.paused = false;
+    G.confirmReset = false;
+    AU.setPaused(false);
+    AU.stopMusic();
+    AU.sfx('down');
+    toTitle();
+  }
+
   function toTitle() {
     loadLevel(levelDef('haroya'));
     G.players = [];
@@ -1952,6 +2001,7 @@
         var pd = devs[G.players[i].device];
         if (pd && pd.startP) {
           G.paused = !G.paused;
+          G.pauseSel = 0; G.confirmReset = false;
           AU.setPaused(G.paused);
           AU.sfx('pause');
           return;
@@ -1961,8 +2011,7 @@
     if (G.paused) {
       for (i = 0; i < G.players.length; i++) {
         var d = devs[G.players[i].device];
-        if (d && d.fireP) AU.toggleMusic();
-        if (d && d.upP) { G.paused = false; AU.setPaused(false); toMap(G.levelId); return; }
+        if (d) stepPause(d);
       }
       return;
     }
@@ -2457,13 +2506,33 @@
     ctx.drawImage(A.player.magnio.normal.small.stand.r, VW / 2 - 8, 120);
   }
 
+  // A list with a pointer in front of the one picked, which is yellow.
+  function menu(items, sel, y) {
+    var w = 0, i;
+    for (i = 0; i < items.length; i++) w = Math.max(w, F.width(items[i]));
+    var x = Math.round((VW - w) / 2);
+    for (i = 0; i < items.length; i++) {
+      var on = i === sel;
+      F.shadow(ctx, items[i], x, y + i * 14, on ? '#ffe060' : '#ffffff');
+      if (on) F.shadow(ctx, '>', x - 12 + ((G.t >> 4) & 1), y + i * 14, '#ffe060');   // nudging back and forth
+    }
+  }
+
   function drawPause() {
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
     ctx.fillRect(0, 0, VW, VH);
-    centered('PAUSE', 76, '#ffffff', 2);
-    centered(SQ + '  MUSIKK: ' + (AU.musicOn() ? 'PÅ' : 'AV'), 104, '#ffffff');
-    centered(TRI + '  TIL KARTET', 118, '#ffffff');
-    centered('OPTIONS: SPILL VIDERE', 132, '#ffffff');
+    if (G.confirmReset) {
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, VW, VH);
+      centered('START PÅ NYTT?', 52, '#ffe060', 2);
+      centered('ALT DU HAR GJORT, BLIR BORTE:', 80, '#ffffff');
+      centered('BRETTENE, KRONENE OG SPORENE.', 92, '#ffffff');
+      menu(['NEI, TILBAKE', 'JA, START PÅ NYTT'], G.confirmSel, 122);
+    } else {
+      centered('PAUSE', 52, '#ffffff', 2);
+      menu(['SPILL VIDERE', 'TIL KARTET', 'MUSIKK: ' + (AU.musicOn() ? 'PÅ' : 'AV'), 'START HELE SPILLET PÅ NYTT'], G.pauseSel, 86);
+    }
+    centered('OPP OG NED VELGER   ' + X + ' OK   ' + SQ + ' TILBAKE', 186, '#a8b8d0');
   }
 
   function drawTalk() {
@@ -2540,15 +2609,19 @@
     ctx.fillStyle = '#0c1020';
     ctx.fillRect(0, 0, VW, VH);
     var img = null, scale = 3;
-    if (pg.art === 'magnio') img = A.player.magnio.normal.big.stand.r;
-    else if (pg.art === 'kasse') { img = A.item.kasse; scale = 4; }
-    else if (pg.art === 'skurk') img = A.npc.skurk.r;
+    if (pg.art && SM.album.has(pg.art)) SM.album.draw(ctx, pg.art, S.t);
+    else if (pg.art === 'magnio') img = A.player.magnio.normal.big.stand.r;
     if (img) {
       var w = img.width * scale, h = img.height * scale;
       ctx.drawImage(img, Math.round((VW - w) / 2), Math.round(110 - h), w, h);
     }
-    var lines = wrap(pg.text, 44);
-    for (var i = 0; i < lines.length; i++) centered(lines[i], 130 + i * 13, '#ffffff');
+    var lines = wrap(pg.text, 44), ty = 130;
+    if (pg.art && SM.album.top(pg.art)) {
+      ty = 10;
+      ctx.fillStyle = 'rgba(12,16,32,0.85)';
+      ctx.fillRect(0, 0, VW, lines.length * 13 + 16);
+    }
+    for (var i = 0; i < lines.length; i++) centered(lines[i], ty + i * 13, '#ffffff');
     if (S.t > 20 && (G.t >> 4) & 1) F.draw(ctx, X, VW - 22, VH - 16, '#ffffff');
   }
 

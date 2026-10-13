@@ -3,7 +3,7 @@
 (function () {
   var SM = window.SM = window.SM || {};
 
-  var ctx = null, master, musicBus, sfxBus, pulse25, pulse50, noiseBuf;
+  var ctx = null, master, musicFilter, musicBus, sfxBus, pulse25, pulse50, noiseBuf;
   var musicOn = true, playing = false, paused = false, fast = false, step = 0, nextT = 0;
   // ?stille in the address turns all sound off, for testing without noise.
   var muted = /[?&]stille\b/.test(location.search);
@@ -14,10 +14,10 @@
     if (!AC) return false;
     try { ctx = new AC(); } catch (e) { return false; }
     master = ctx.createGain(); master.gain.value = muted ? 0 : 0.6; master.connect(ctx.destination);
-    var musicFilter = ctx.createBiquadFilter();
+    musicFilter = ctx.createBiquadFilter();
     musicFilter.type = 'lowpass'; musicFilter.frequency.value = 2600; musicFilter.Q.value = 0.7;
     musicFilter.connect(master);
-    musicBus = ctx.createGain(); musicBus.gain.value = 0.5; musicBus.connect(musicFilter);
+    freshBus();
     sfxBus = ctx.createGain(); sfxBus.gain.value = 0.5; sfxBus.connect(master);
     pulse25 = makePulse(0.25);
     pulse50 = makePulse(0.5);
@@ -25,6 +25,19 @@
     var d = noiseBuf.getChannelData(0);
     for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     return true;
+  }
+
+  // Every tune plays through a bus of its own. When another tune starts (or
+  // the same one from the top), the notes already sounding from the last one,
+  // like the long chord underneath, fade out in a few hundredths of a
+  // second instead of clashing with the new ones.
+  function freshBus() {
+    if (musicBus) {
+      var old = musicBus;
+      old.gain.setTargetAtTime(0, ctx.currentTime, 0.02);
+      setTimeout(function () { old.disconnect(); }, 500);
+    }
+    musicBus = ctx.createGain(); musicBus.gain.value = 0.5; musicBus.connect(musicFilter);
   }
 
   // Pulse wave with the given duty cycle, the classic NES sound.
@@ -265,8 +278,12 @@
     sfx: sfx,
     update: update,
     // name picks the tune: 'main', 'hval', 'boks', 'bil', 'quiz', 'indisk', 'praha' or 'funk'.
+    // A tune that is already playing just carries on.
     startMusic: function (name) {
-      if (name && SONGS[name]) song = SONGS[name];
+      var next = name && SONGS[name] ? SONGS[name] : song;
+      if (playing && next === song) return;
+      song = next;
+      if (ctx) freshBus();
       playing = true; step = 0; nextT = 0;
     },
     stopMusic: function () { playing = false; },

@@ -3,9 +3,13 @@
 Et bursdagsspill til Magne. Det spilles som de gamle 2D-Mario-spillene, men
 foregår der han har levd livet sitt, i den rekkefølgen han har levd det.
 
-En mystisk mann i frakk og hatt har stjålet den røde verktøykassa hans, og
-Magnio følger sporene gjennom livet sitt. Folk han møter underveis, gir ham
-spor i saken. (Det er Gorm i forkledning. Han trengte verktøyet til en statue.)
+En mystisk mann i frakk og hatt har stjålet den røde verktøykassa hans. Der
+kassa sto, ligger det i stedet et gammelt fotoalbum, og på første side er
+Harøya, med mannen i frakk i kanten av bildet. Magnio ser nærmere etter og står
+plutselig i bildet. Hvert brett er en side i albumet, og Lillesand, den siste,
+er i dag. Folk han møter underveis, har sett mannen i frakk og gir ham spor i
+saken. (Det er Gorm i forkledning. Han la albumet der så Magne skulle få gå
+gjennom hele livet sitt på bursdagen sin, og trengte verktøyet til en statue.)
 
 1. **Harøya**, der han er født: myr, sau, kirka og kaia i Steinshamn med
    sildetønner og hvalstasjonen. På enden av kaia sluker en hval ham.
@@ -97,8 +101,10 @@ spor i saken. (Det er Gorm i forkledning. Han trengte verktøyet til en statue.)
 
 Mellom brettene er det et kart over Sør-Norge. Pilene flytter Magnio til
 stedet som ligger i den retningen, ✕ reiser dit, og □ viser sporene. Fremgang, kroner og spor
-lagres i nettleseren. Legg til `?ny` i adressen for å starte på nytt, og `?stille` for å slå av all
-lyd (for eksempel `?ny&stille`).
+lagres i nettleseren. Pausemenyen (Options) har valgene spill videre, til
+kartet, musikk av og på og start hele spillet på nytt: opp og ned velger, ✕ tar
+valget og □ går tilbake. Å starte på nytt må bekreftes. Det samme gjør `?ny` i
+adressen, og `?stille` slår av all lyd (for eksempel `?ny&stille`).
 
 Spillet er vanlig HTML og JavaScript, uten byggesteg og uten filer som må
 lastes ned.
@@ -196,6 +202,7 @@ Tallene står øverst i `src/game.js`.
   `src/catan.js` Catan på Heim, `src/sloying.js` sløyingen av fisken og
   `src/quiz.js` quizen på kafeen i Lillesand, `src/indisk.js` den indiske
   restauranten i Moraira og `src/byvandring.js` turen rundt i Praha.
+- `src/album.js` har bildene i prologen: verkstedet, albumet og bildet han går inn i.
 - `src/kake.js` har kakescenen etter rulleteksten, og `src/fest.js` dansen
   etter den.
 - `IDEER.md` samler idéer til flere minispill.

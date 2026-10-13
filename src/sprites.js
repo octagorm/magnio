@@ -2353,7 +2353,8 @@
     '.HHHHHHSSSKS....', '.HHHHSSSSSKSS...', '.HHHSSSSSSSPPS..', '.HHHSSSSSSPPPP..', '.HHHSSSWWWWWWW..',
     '.HHHSSWWWWWWWWW.', '.HHHSSSwwSSwww..', '.HHH.SSSSSSSS...', '.HHH..SSSSSS....'
   ]);
-  var STATUE_TORSO = ['.HHH.RRRRRRR.SS.', '.HHHRRRRRRRRRSS.', '.HHRRRRRRRRRRRR.', '.HRBbBbBbBbBbBR.'].concat(BIG_TORSO_JUMP.slice(4));
+  // in the shell suit, the hockey hair down his back and one fist in the air
+  var STATUE_TORSO = ['.HHH.VVVVVVV.SS.', '.HHHVVVVVVVVVSS.', '.HHTTTTTTTTTTTT.', '.HTTTTTTTTTTTTT.'].concat(TRACK_TORSO_JUMP.slice(4));
   var RIDING_LEGS = [
     '.....OOOOOOOO...', '....OOOOOOOOOO..', '.....OOOOOOOOO..', '.........OOOO...', '.........OOOO...',
     '.........OOOO...', '..........OOOO..', '..........NNNNN.', '..........NNNNNN', '................'
@@ -2404,9 +2405,9 @@
     // Magnio on its back, one leg down its side, the glove raised high. He is
     // drawn facing right and then turned round, to face where the whale goes.
     var rider = fromRows(['................', '................', '................', '................', '................', '................']
-      .concat(STATUE_HEAD, STATUE_TORSO, RIDING_LEGS), merge(merge(BASE, CHARS.magnio.normal), { H: '#8a8478', B: '#f4f4f4', b: '#1f2f6a' }), 'statue rider'); // the statue keeps the old patterned jumper
+      .concat(STATUE_HEAD, STATUE_TORSO, RIDING_LEGS), merge(merge(BASE, CHARS.magnio.track), { H: '#8a8478' }), 'statue rider');
     var rg = rider.getContext('2d');
-    rect(rg, 13, 6, 2, 13, '#c8281c');                                                         // the raised arm
+    rect(rg, 13, 6, 2, 13, CHARS.magnio.track.V); rect(rg, 13, 15, 2, 2, CHARS.magnio.track.T); // the raised arm, stripe and all
     rect(rg, 12, 1, 4, 5, '#a01818'); rect(rg, 12, 1, 3, 4, '#e83030');                       // and the glove
     a.drawImage(mirror(rider), 30, 18);                                                       // facing the head, like the whale
     bronze(art);
