@@ -2043,6 +2043,68 @@
   PEOPLE.gorm = { head: 'gorm', body: 'coat', pal: { H: '#5e5248', D: '#5e5248', C: '#b08850', c: '#7a5a30', L: '#2a2a2a', N: '#141414' } };
   npc.gorm = pair(HEADS.gorm.concat(BODIES.coat), merge({ S: '#f8c088', P: '#e8946a', K: '#141414' }, PEOPLE.gorm.pal), 'npc gorm');
 
+  // ================================================================ the drive on Harøya
+  // A red estate car, the kind every family on the island had. From the side
+  // facing right (parked on Harøya, and rolling down the hill), and from above
+  // facing right (on the road).
+  var CAR = { R: '#c8281c', r: '#8a1810', h: '#e04838', W: '#a8d0e8', K: '#1a1a1a', G: '#a0a0a8', Y: '#f8e070', O: '#f0a020' };
+  function carSide() {
+    var c = mk(32, 15), g = c.getContext('2d');
+    rect(g, 6, 1, 17, 1, CAR.r);
+    for (var y = 2; y < 5; y++) rect(g, 5, y, 16 + y, 1, CAR.R);   // the cabin, windscreen sloping forward
+    rect(g, 6, 2, 6, 3, CAR.W); rect(g, 13, 2, 6, 3, CAR.W);       // rear and door windows
+    for (y = 2; y < 5; y++) rect(g, 20, y, y, 1, CAR.W);            // windscreen
+    rect(g, 0, 5, 32, 5, CAR.R);
+    rect(g, 1, 5, 30, 1, CAR.h);
+    rect(g, 12, 5, 1, 4, CAR.r); rect(g, 19, 5, 1, 4, CAR.r);       // door lines
+    rect(g, 30, 6, 2, 2, CAR.Y); rect(g, 0, 6, 2, 2, CAR.O);        // lights
+    rect(g, 0, 10, 32, 1, '#3a3a3a');                               // bumpers and sills
+    for (var i = 0; i < 2; i++) {
+      var wx = i ? 24 : 7;
+      disc(g, wx, 11, 4, 3, '#3a3a3a');
+      disc(g, wx, 11, 3, 3, CAR.K);
+      disc(g, wx, 11, 1, 1, CAR.G);
+    }
+    return c;
+  }
+  function carTop() {
+    var c = mk(24, 12), g = c.getContext('2d');
+    rect(g, 3, 0, 5, 12, CAR.K); rect(g, 16, 0, 5, 12, CAR.K);      // wheels, poking out at the sides
+    rect(g, 0, 1, 24, 10, CAR.R);
+    g.clearRect(0, 1, 1, 1); g.clearRect(23, 1, 1, 1); g.clearRect(0, 10, 1, 1); g.clearRect(23, 10, 1, 1);
+    rect(g, 17, 2, 6, 8, CAR.h);                                    // the bonnet catches the light
+    rect(g, 14, 2, 3, 8, CAR.W);                                    // windscreen
+    rect(g, 5, 2, 9, 8, CAR.r);                                     // roof
+    rect(g, 6, 3, 7, 1, CAR.R); rect(g, 6, 8, 7, 1, CAR.R);         // roof rails
+    rect(g, 3, 2, 2, 8, CAR.W);                                     // rear window
+    rect(g, 23, 2, 1, 2, CAR.Y); rect(g, 23, 8, 1, 2, CAR.Y);
+    rect(g, 0, 2, 1, 2, CAR.O); rect(g, 0, 8, 1, 2, CAR.O);
+    rect(g, 14, 0, 1, 1, CAR.R); rect(g, 14, 11, 1, 1, CAR.R);      // mirrors
+    return c;
+  }
+  // The guardian angel, in pale blues. The game draws it see-through.
+  function angel() {
+    var c = mk(28, 34), g = c.getContext('2d');
+    var robe = '#c8e4ff', fold = '#9cc4ec', wing = '#eef8ff', feather = '#b8d8f0', skin = '#f8e4d8', halo = '#fff090';
+    disc(g, 6, 16, 5, 9, wing); disc(g, 21, 16, 5, 9, wing);
+    for (var i = 0; i < 4; i++) { rect(g, 2 + i, 12 + i * 3, 4, 1, feather); rect(g, 22 - i, 12 + i * 3, 4, 1, feather); }
+    for (var y = 12; y < 34; y++) {
+      var hw = 3 + Math.floor((y - 12) * 0.36);
+      rect(g, 14 - hw, y, hw * 2, 1, robe);
+      if (y > 18 && y % 2) rect(g, 13, y, 1, 1, fold);
+    }
+    rect(g, 9, 14, 2, 7, robe); rect(g, 17, 14, 2, 7, robe);      // sleeves
+    rect(g, 11, 19, 2, 2, skin); rect(g, 15, 19, 2, 2, skin);     // hands folded
+    disc(g, 14, 8, 3, 3, skin);
+    rect(g, 11, 5, 7, 2, '#f8e8b0');                               // hair
+    rect(g, 12, 8, 1, 1, '#4060a0'); rect(g, 15, 8, 1, 1, '#4060a0');
+    rect(g, 10, 1, 8, 1, halo); rect(g, 9, 2, 1, 1, halo); rect(g, 18, 2, 1, 1, halo); rect(g, 10, 3, 8, 1, halo);
+    return c;
+  }
+  var car = { side: carSide(), top: carTop() };
+  car.sideL = mirror(car.side);
+  npc.bil = { r: car.side, l: car.sideL };
+
   // The statue: Magne riding a whale, with a mullet, raising a boxing glove.
   function statue() {
     var w = 96, h = 104, c = mk(w, h), g = c.getContext('2d');
@@ -2093,6 +2155,8 @@
 
   SM.art = {
     statue: statue(),
+    car: car,
+    angel: angel(),
     helicopter: helicopter(),
     punch: punchWave,
     terminal: terminal,

@@ -88,6 +88,9 @@
           'PASS DEG FOR MÅSANE. DEI STEL ALT SOM GLINSAR.',
           'MANNEN I FRAKKEN? HAN HADDE MØRKE BRILLER, OG BARTEN HANS SÅG UT TIL Å VERE LIMT PÅ.'
         ] },
+        { look: 'bil', name: 'BILEN', x: 104, still: true, game: 'drive', lines: [
+          'EIN RAUD STASJONSVOGN MED NØKKELEN I TENNINGA. KANSKJE EIN TUR RUNDT ØYA?'
+        ] },
         { look: 'hvalfanger', name: 'HVALFANGAREN', x: 147, lines: [
           'HAN I FRAKKEN VILLE BLI MED HVALBÅTEN. EG SA NEI.',
           'SÅ GJEKK HAN UT PÅ ENDEN AV KAIA OG VINKA PÅ NOKO UTE PÅ SJØEN...',

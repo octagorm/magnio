@@ -118,7 +118,7 @@
   }
 
   // ---------------------------------------------------------------- music
-  // Four original tunes. Each bar is a chord plus eight eighth-note tokens
+  // Five original tunes. Each bar is a chord plus eight eighth-note tokens
   // for the melody: a note, '-' to hold the one before, or '.' for a rest.
   // The melody is played with soft triangle and sine tones over a quiet bass
   // and chord pad, and everything goes through a low-pass filter so nothing
@@ -152,6 +152,11 @@
     boks: { bpm: 132, lead: 'punchy', bass: 'drive', perc: true, bars: [
       ['Em', 'E5 - E5 G5 - E5 D5 -'], ['Em', 'E5 - - B4 D5 - E5 -'], ['C', 'G5 - G5 E5 - G5 A5 -'], ['D', 'F#5 - - D5 - - . .'],
       ['Em', 'E5 - E5 G5 - E5 D5 -'], ['Em', 'E5 - - B4 D5 - E5 -'], ['C', 'G5 - A5 - B5 - A5 G5'], ['B', 'F#5 - D#5 - B4 - . .']
+    ] },
+    // Bright and quick, for the drive round Harøya.
+    bil: { bpm: 138, lead: 'punchy', bass: 'drive', perc: true, bars: [
+      ['D', 'A4 - D5 - F#5 - E5 D5'], ['G', 'B4 - D5 - G5 - F#5 E5'], ['A', 'E5 - C#5 - A4 - B4 C#5'], ['D', 'D5 - - - A4 - . .'],
+      ['D', 'F#5 - A5 - F#5 - E5 D5'], ['G', 'G5 - B5 - G5 - F#5 E5'], ['A', 'E5 F#5 G5 - F#5 - E5 -'], ['D', 'D5 - - - - - . .']
     ] },
     // Funky, for the dance at the very end: a bouncing octave bass and hi-hats.
     funk: { bpm: 112, lead: 'punchy', bass: 'funk', perc: 'funk', bars: [
@@ -244,7 +249,7 @@
     resume: resume,
     sfx: sfx,
     update: update,
-    // name picks the tune: 'main', 'hval', 'boks' or 'funk'.
+    // name picks the tune: 'main', 'hval', 'boks', 'bil' or 'funk'.
     startMusic: function (name) {
       if (name && SONGS[name]) song = SONGS[name];
       playing = true; step = 0; nextT = 0;

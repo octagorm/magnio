@@ -9,6 +9,11 @@ spor i saken. (Det er Gorm i forkledning. Han trengte verktøyet til en statue.)
 
 1. **Harøya**, der han er født: myr, sau, kirka og kaia i Steinshamn med
    sildetønner og hvalstasjonen. På enden av kaia sluker en hval ham.
+   Ved et av husene står en rød stasjonsvogn. Snakker man med den (opp eller
+   △), blir det kjøretur rundt øya, sett ovenfra: opp og ned styrer, og veien
+   blir smalere og raskere til han kjører utfor. Bilen ruller ned bakken,
+   Magnio kryper ut uskadd, og ved siden av ham står en engel. Englevakt!
+   Etterpå er man tilbake ved bilen.
 2. **I hvalens buk**: ribbein, magesyre og Jonas, som har bodd der en stund.
    Ut kommer man gjennom blåseholet.
 3. **Trondheim**: bryggene og Nidarosdomen over elva, universitetet,
@@ -48,10 +53,12 @@ lastes ned.
 ## Kjøre det
 
 ```bash
-python3 -m http.server 8123
+python3 serve.py
 ```
 
-Åpne deretter http://localhost:8123. I de fleste nettlesere går det også an å
+Åpne deretter http://localhost:8123. `serve.py` er som `python3 -m http.server
+8123`, men ber nettleseren om ikke å lagre filene, så en ny innlasting alltid
+får med seg siste versjon av alt. I de fleste nettlesere går det også an å
 åpne `index.html` direkte.
 
 `?snarvei` i adressen viser en side med lenker rett til hver scene: det
@@ -118,6 +125,7 @@ Tallene står øverst i `src/game.js`.
 - `src/audio.js` har lydeffektene og bakgrunnsmusikken, som er en egen melodi.
 - `src/input.js` håndterer tastatur og kontroller.
 - `src/game.js` har fysikken, fiendene, historien, kartet og tegningen.
+- `src/kjoretur.js` har kjøreturen på Harøya.
 - `src/kake.js` har kakescenen etter rulleteksten, og `src/fest.js` dansen
   etter den.
 - `IDEER.md` samler idéer til flere minispill.

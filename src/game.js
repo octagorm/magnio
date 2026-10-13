@@ -765,12 +765,14 @@
 
   // ---------------------------------------------------------------- people
   // dance: hops and turns. ball: has a football at his feet. ends: talking to
-  // this person finishes the level.
+  // this person finishes the level. game: talking starts a minigame, and the
+  // level carries on afterwards. still: a thing rather than a person, which
+  // does not turn to face you.
   function makeNpc(n) {
-    var h = A.npc[n.look].r.height;
+    var spr = A.npc[n.look].r;
     return { look: n.look, name: n.name, lines: n.lines, clue: n.clue, dance: n.dance, ball: n.ball, ends: n.ends,
-      hearts: n.hearts, gives: n.gives, pays: n.pays, auto: n.auto,
-      x: n.x * TS, y: ((n.y || 11) + 1) * TS - h, w: 16, h: h };
+      hearts: n.hearts, gives: n.gives, pays: n.pays, auto: n.auto, game: n.game, still: n.still,
+      x: n.x * TS, y: ((n.y || 11) + 1) * TS - spr.height, w: spr.width, h: spr.height };
   }
 
   function findNear() {
@@ -780,7 +782,7 @@
       if (p.state !== 'play' || !p.onGround) continue;
       for (var j = 0; j < G.npcs.length; j++) {
         var n = G.npcs[j];
-        if (Math.abs(p.x + p.w / 2 - (n.x + 8)) < 28 && p.y + p.h > n.y && p.y < n.y + n.h) {
+        if (Math.abs(p.x + p.w / 2 - (n.x + n.w / 2)) < 20 + n.w / 2 && p.y + p.h > n.y && p.y < n.y + n.h) {
           G.near = { npc: n, player: p };
           return;
         }
@@ -827,6 +829,7 @@
         }
         if (T.npc.ends === 'box') startBox();
         else if (T.npc.ends) startTalkEnd(T.npc);
+        else if (T.npc.game === 'drive') startDrive();
       }
     }
   }
@@ -1250,6 +1253,17 @@
 
   // After the credits, as in the films: Magne helps himself to cake (src/kake.js),
   // and then everyone dances (src/fest.js).
+  // The drive round Harøya (src/kjoretur.js), from the red car. Afterwards
+  // the level carries on where it was.
+  function startDrive() {
+    G.state = 'drive';
+    SM.drive.start({ pressed: anyPressed, big: G.players[0].power > 0, done: function () {
+      G.state = 'play';
+      for (var i = 0; i < G.players.length; i++) G.players[i].jumpBuf = 0;
+      AU.startMusic(G.L.music || 'main');
+    } });
+  }
+
   function startCake() {
     G.state = 'cake';
     G.credits = null;
@@ -1672,6 +1686,7 @@
     else if (G.state === 'box') stepBox();
     else if (G.state === 'credits') stepCredits();
     else if (G.state === 'cake') SM.cake.step();
+    else if (G.state === 'drive') SM.drive.step();
     else if (G.state === 'party') SM.party.step();
   }
 
@@ -1927,9 +1942,9 @@
 
   function drawNpc(n, cx) {
     var x = Math.round(n.x - cx);
-    if (x < -20 || x > VW + 4) return;
+    if (x < -n.w - 4 || x > VW + 4) return;
     var p1 = G.players[0];
-    var faceLeft = p1 && p1.x + p1.w / 2 < n.x + 8, hop = 0;
+    var faceLeft = !n.still && p1 && p1.x + p1.w / 2 < n.x + 8, hop = 0;
     if (n.dance) {
       faceLeft = Math.floor(G.t / 20) % 2 === 0;
       hop = Math.abs(Math.round(Math.sin(G.t / 6) * 3));
@@ -1943,7 +1958,7 @@
     }
     if (G.near && G.near.npc === n && !G.talk) {
       var bob = Math.round(Math.sin(G.t / 8) * 2);
-      F.shadow(ctx, '△', x + 5, n.y + OFFY - 11 + bob, '#ffffff');
+      F.shadow(ctx, '△', x + n.w / 2 - 3, n.y + OFFY - 11 + bob, '#ffffff');
     }
   }
 
@@ -2331,6 +2346,7 @@
     if (G.state === 'box') { drawRingScene(); return; }
     if (G.state === 'credits') { drawCredits(); return; }
     if (G.state === 'cake') { SM.cake.draw(ctx); return; }
+    if (G.state === 'drive') { SM.drive.draw(ctx); return; }
     if (G.state === 'party') { SM.party.draw(ctx); return; }
     if (G.end && G.end.type === 'fly' && G.fade >= 1) { drawFlight(); return; }
     if (G.end && G.end.type === 'spout' && (G.end.phase === 'flash' || G.end.phase === 'clear')) drawOutside();
@@ -2376,6 +2392,8 @@
     G.intro = 0;
   }
 
+  // In the order he would come across them: the start, each level (with the
+  // drive on Harøya), and the ending.
   var SHORTCUTS = [
     ['tittel', 'Tittelskjermen', function () {}],
     ['prolog', 'Prologen', function () { G.save = freshSave(); startStory(PROLOGUE, function () { toMap('haroya'); }); }],
@@ -2386,6 +2404,17 @@
       G.save = finishedSave();
       startLevel(id, 'kb1');
     }]);
+    if (id === 'haroya') {
+      SHORTCUTS.push(['kjoretur', 'Kjøreturen på Harøya', function () {
+        // start beside the car, so the level carries on from there afterwards
+        var car = (levelDef('haroya').build().npcs || []).filter(function (n) { return n.game === 'drive'; })[0];
+        G.save = finishedSave();
+        if (car && !startCol) startCol = car.x - 1;
+        startLevel('haroya', 'kb1');
+        G.intro = 0;
+        startDrive();
+      }]);
+    }
   });
   SHORTCUTS.push(
     ['boksekamp', 'Boksekampen', function () { atLillesandEnd(); startBox(); }],
