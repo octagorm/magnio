@@ -65,13 +65,15 @@
   }
 
   // ---------------------------------------------------------------- players
-  // C = flat cap, R = jumper, B/b = the patterned band across the chest,
-  // O = trousers, S = skin, P = nose, W/w = moustache, H = hair, K = eyes,
-  // N = shoes.
+  // C/c = knitted hat and its ribbed fold, R = T-shirt, O = trousers,
+  // S = skin, P = nose, W/w = moustache, H = hair, K = eyes, N = shoes.
+  // Drawn facing right, so the shoes stick out a little to the right of the
+  // legs, toes first. With the boxing gloves he wears an eighties shell suit
+  // instead (TRACK_TORSO below): V, T, U and Y are its colours.
 
   var SMALL_TOP = [
-    '......CCCCc.....',
-    '.....CcCCCCCCC..',
+    '......CCCCC.....',
+    '.....cCcCcCc....',
     '.....HHSSKS.....',
     '....HSSSSKSSS...',
     '....HSSSSSSPPS..',
@@ -80,33 +82,33 @@
     '......SSSSS.....',
     '.....RRRRRR.....',
     '....RRRRRRRR....',
-    '...RBbBbBbBbR...',
+    '...RRRRRRRRRR...',
     '...SSRRRRRRSS...'
   ];
   var SMALL_TOP_JUMP = SMALL_TOP.slice(0, 8).concat([
     '.....RRRRRR.SS..',
     '....RRRRRRRRR...',
-    '..SSBbBbBbBbR...',
+    '..SSRRRRRRRRR...',
     '..SS.RRRRRR.....'
   ]);
   var SMALL_LEGS = {
     stand: [
       '....OOOOOOOO....',
       '....OOO..OOO....',
-      '...NNNN..NNNN...',
-      '..NNNNN..NNNNN..'
+      '....NNNN.NNNN...',
+      '....NNNN.NNNN...'
     ],
     walk1: [
       '...OOOOOOOOO....',
       '..OOOO....OOO...',
-      '.NNNN......NNN..',
-      '.NNN.......NNNN.'
+      '..NNNN....NNNN..',
+      '..NNNN....NNNN..'
     ],
     walk2: [
       '....OOOOOOO.....',
       '.....OOOOO......',
-      '.....NNNNN......',
-      '....NNNNNNN.....'
+      '.....NNNNNN.....',
+      '.....NNNNNN.....'
     ]
   };
   var SMALL = {
@@ -117,9 +119,9 @@
   };
 
   var BIG_HEAD = [
-    '.....CCCCCc.....',
-    '....CCcCCCCCCC..',
-    '....CCCCCCCCCCCC',
+    '.....CCCCCC.....',
+    '....CCCCCCCCC...',
+    '....cCcCcCcCc...',
     '....HHHSSSKS....',
     '...HHSSSSSKSS...',
     '...HSSSSSSSPPS..',
@@ -134,9 +136,9 @@
     '.....RRRRRRR....',
     '....RRRRRRRRRR..',
     '...RRRRRRRRRRRR.',
-    '..RBbBbBbBbBbBbR',
-    '..RbBbBbBbBbBbBR',
+    '..RRRRRRRRRRRRRR',
     '..RRR.RRRRRR.RRR',
+    '..SSS.RRRRRR.SSS',
     '..SSS.RRRRRR.SSS',
     '..SS..RRRRRR..SS',
     '......OOOOOO....',
@@ -146,9 +148,9 @@
     '.....RRRRRRR.SS.',
     '....RRRRRRRRRSS.',
     '...RRRRRRRRRRRR.',
-    '..RBbBbBbBbBbBR.',
-    '..RbBbBbBbBbBR..',
-    '..RRR.RRRRRR....',
+    '..RRRRRRRRRRRRR.',
+    '..RRR.RRRRRRRR..',
+    '..SSS.RRRRRR....',
     '..SSS.RRRRRR....',
     '..SS..RRRRRR....',
     '......OOOOOO....',
@@ -163,9 +165,9 @@
       '....OOO....OOO..',
       '....OOO....OOO..',
       '....OOO....OOO..',
-      '...NNNN....NNNN.',
-      '..NNNNN....NNNNN',
-      '..NNNNN....NNNNN'
+      '....NNN....NNN..',
+      '....NNNN...NNNN.',
+      '....NNNN...NNNN.'
     ],
     walk1: [
       '.....OOOOOOOO...',
@@ -174,10 +176,10 @@
       '..OOOO.....OOOO.',
       '..OOO.......OOO.',
       '.OOO........OOO.',
-      '.OOO.........OOO',
-      'NNNN.........NNN',
-      'NNNN........NNNN',
-      'NNN.........NNNN'
+      '.OOO........OOO.',
+      '.NNN........NNN.',
+      '.NNNN.......NNNN',
+      '.NNNN.......NNNN'
     ],
     walk2: [
       '.....OOOOOOOO...',
@@ -187,10 +189,44 @@
       '......OOOOO.....',
       '.......OOOO.....',
       '.......OOOO.....',
-      '......NNNNN.....',
-      '.....NNNNNNN....',
-      '.....NNNNNNN....'
+      '.......NNNN.....',
+      '.......NNNNN....',
+      '.......NNNNN....'
     ]
+  };
+  // The shell suit, with long sleeves down to the wrists. The game draws
+  // the boxing gloves on his hands (drawPlayer in src/game.js).
+  // A broad stripe (T) across the chest and down the sleeves, edged below
+  // (Y), and a waistband (U) in the stripe's other colour.
+  var TRACK_TORSO = [
+    '.....VVVVVVV....',
+    '....VVVVVVVVVV..',
+    '...TTTTTTTTTTTT.',
+    '..TTTTTTTTTTTTTT',
+    '..YYY.YYYYYY.YYY',
+    '..VVV.VVVVVV.VVV',
+    '..VVV.VVVVVV.VVV',
+    '..SS..UUUUUU..SS',
+    '......OOOOOO....',
+    '.....OOOOOOOO...'
+  ];
+  var TRACK_TORSO_JUMP = [
+    '.....VVVVVVV.SS.',
+    '....VVVVVVVVVVV.',
+    '...TTTTTTTTTTTT.',
+    '..TTTTTTTTTTTTT.',
+    '..YYY.YYYYYYYY..',
+    '..VVV.VVVVVV....',
+    '..VVV.VVVVVV....',
+    '..SS..UUUUUU....',
+    '......OOOOOO....',
+    '.....OOOOOOOO...'
+  ];
+  var SUIT = {
+    stand: BIG_HEAD.concat(TRACK_TORSO, BIG_LEGS.stand),
+    walk1: BIG_HEAD.concat(TRACK_TORSO, BIG_LEGS.walk1),
+    walk2: BIG_HEAD.concat(TRACK_TORSO, BIG_LEGS.walk2),
+    jump: BIG_HEAD.concat(TRACK_TORSO_JUMP, BIG_LEGS.walk1)
   };
   var BIG = {
     stand: BIG_HEAD.concat(BIG_TORSO, BIG_LEGS.stand),
@@ -201,34 +237,42 @@
 
   var BASE = {
     K: '#141414', S: '#f8c088', P: '#e8946a', W: '#f4f4f4', w: '#a8a8a8', H: '#b4b4b4',
-    N: '#5a3416', C: '#7a5c3c', c: '#a8865e', b: '#1f2f6a'
+    N: '#3a2a1e', C: '#c8302c', c: '#8a1c1c'
   };
+  // normal: a bright blue T-shirt and black trousers. fire: with the cigar,
+  // a white T-shirt. track: with the boxing gloves, the shell suit.
   var CHARS = {
     magnio: {
-      normal: { R: '#c8281c', B: '#f4f4f4', O: '#2a3448' },
-      fire: { R: '#f0f0ea', B: '#c8281c', O: '#2a3448' }
+      normal: { R: '#1a62f0', O: '#1c1c22' },
+      fire: { R: '#f0f0ea', O: '#1c1c22' },
+      track: { V: '#2448c8', T: '#ffffff', U: '#e02828', Y: '#e02828', O: '#2448c8' }
     },
     frodigi: {
-      normal: { R: '#1f8e3a', B: '#f4f4f4', O: '#3a3020' },
-      fire: { R: '#f0f0ea', B: '#1f8e3a', O: '#3a3020' }
+      normal: { R: '#1f8e3a', O: '#3a3020', C: '#2a5aa8', c: '#1a3a78' },
+      fire: { R: '#f0f0ea', O: '#3a3020', C: '#2a5aa8', c: '#1a3a78' },
+      track: { V: '#1f8e3a', T: '#ffffff', U: '#f8d830', Y: '#f8d830', O: '#1f8e3a', C: '#2a5aa8', c: '#1a3a78' }
     }
   };
-  // Golden glow while the cognac lasts. The game cycles through these.
+  // Golden glow while the cognac lasts. The game cycles through these. The
+  // shell suit glows too: its four colours take the two of the T-shirt.
   var STAR = [
-    { R: '#f8b800', B: '#fff6c0', O: '#d82818', C: '#f8d040' },
-    { R: '#ffffff', B: '#f8b800', O: '#f8b800', C: '#ffffff' },
-    { R: '#f87800', B: '#ffd080', O: '#3a2a10', C: '#f87800' }
+    { R: '#f8b800', B: '#fff6c0', O: '#d82818', C: '#f8d040', c: '#d89810' },
+    { R: '#ffffff', B: '#f8b800', O: '#f8b800', C: '#ffffff', c: '#f8d040' },
+    { R: '#f87800', B: '#ffd080', O: '#3a2a10', C: '#f87800', c: '#c85800' }
   ];
+  STAR.forEach(function (st) { st.V = st.R; st.T = st.B; st.U = st.R; st.Y = st.B; });
 
   var player = {};
   for (var ch in CHARS) {
     player[ch] = {};
-    var variants = { normal: CHARS[ch].normal, fire: CHARS[ch].fire, star0: STAR[0], star1: STAR[1], star2: STAR[2] };
+    var variants = { normal: CHARS[ch].normal, fire: CHARS[ch].fire, track: CHARS[ch].track, star0: STAR[0], star1: STAR[1], star2: STAR[2] };
     for (var v in variants) {
-      var pal = merge(BASE, variants[v]);
-      var set = { small: {}, big: {} };
+      var pal = merge(merge(BASE, CHARS[ch].normal), variants[v]);
+      var set = { small: {}, big: {}, suit: {} };
       for (var f in SMALL) set.small[f] = pair(SMALL[f], pal, ch + ' small ' + f);
       for (f in BIG) set.big[f] = pair(BIG[f], pal, ch + ' big ' + f);
+      // in the shell suit, for when he has the boxing gloves
+      if (pal.V) for (f in SUIT) set.suit[f] = pair(SUIT[f], pal, ch + ' suit ' + f);
       player[ch][v] = set;
     }
   }
@@ -1543,6 +1587,47 @@
       merge({ S: '#f8c088', P: '#e8946a', K: '#141414', H: '#5a3a1a' }, pp.pal), 'npc ' + who);
   }
 
+  // Magnio's children in Trondheim (the brood in src/game.js). Each of the
+  // four is drawn as a baby, a child, a teenager and a grown-up; the
+  // grandchildren stay babies. H is hair, D beard, C clothes, E the print on
+  // a child's shirt, L trousers, N shoes.
+  var BABY = [
+    '......HHH.......', '.....HSSSS......', '.....SSSKS......', '.....SSSSSP.....', '......SSSS......',
+    '.....CCCCC......', '....SCCCCCS.....', '.....CCCCC......', '.....CC.CC......', '.....SS.SS......'
+  ];
+  var TEEN_BODY = [
+    '.....CCCCCC.....', '....CCCCCCCC....', '...CCCCCCCCCC...', '...CC.CCCC.CC...', '...SS.CCCC.SS...',
+    '......CCCC......', '.....LLLLLL.....', '.....LL..LL.....', '.....LL..LL.....', '.....LL..LL.....',
+    '.....LL..LL.....', '....NNN..NNN....', '....NNN..NNN....'
+  ];
+  var SKIN = { S: '#f8c088', P: '#e8946a', K: '#141414' };
+  var CHILDREN = [
+    { H: '#e0c070', C: '#3a6ac8', E: '#a8c8f0', L: '#2a3448', N: '#3a2a1a' },
+    { H: '#7a5230', D: '#6a4428', C: '#2a8a4a', E: '#a0e0b0', L: '#3a3a3a', N: '#1a1a1a', beard: true },
+    { H: '#c8a060', C: '#e0a020', E: '#fff0b0', L: '#2a3448', N: '#5a3416' },
+    { H: '#9a6a3a', D: '#8a5a30', C: '#c8304a', E: '#f8b0c0', L: '#2a2a3a', N: '#1a1a1a', beard: true }
+  ];
+  var hairy = function (rows) { return rows.map(function (r) { return r.replace(/Y/g, 'H'); }); };
+  var brood = { kids: [], grand: [] };
+  CHILDREN.forEach(function (c, i) {
+    var pal = merge(SKIN, c);
+    brood.kids.push({
+      baby: pair(BABY, pal, 'baby ' + i),
+      child: pair(hairy(KID_HEAD).concat(KID_BODY), pal, 'child ' + i),
+      teen: pair(HEADS.hair.concat(TEEN_BODY), pal, 'teen ' + i),
+      adult: pair((c.beard ? HEADS.aslak : HEADS.hair).concat(BODIES.plain), pal, 'adult ' + i)
+    });
+  });
+  [['#f0d070', '#e870b0'], ['#6a4a2a', '#5ab0e8'], ['#e0c070', '#f0f0f0'], ['#9a6a3a', '#a0d060'],
+    ['#c8a060', '#f0a030'], ['#3a2a1a', '#c84a4a'], ['#f0d070', '#8a70d0'], ['#7a5230', '#f0d040'],
+    ['#e0c070', '#40c0b0'], ['#9a6a3a', '#f0f0a0'], ['#f0d070', '#d85030']].forEach(function (g, i) {
+    brood.grand.push(pair(BABY, merge(SKIN, { H: g[0], C: g[1] }), 'grandchild ' + i));
+  });
+  // The j-th child of son n, the same one in Trondheim and in the dance at
+  // the end. They have 4, 4, 1 and 2, so each of the eleven looks different.
+  var FIRST_GRAND = [0, 4, 8, 9];
+  brood.grandOf = function (n, j) { return brood.grand[(FIRST_GRAND[n] + j) % brood.grand.length]; };
+
   // Magnio's red toolbox, the thing that went missing.
   item.kasse = fromRows([
     '................',
@@ -1773,6 +1858,40 @@
   }
 
   // ================================================================ Værnes
+  // A jet parked outside the terminal window, nose to the left, standing on
+  // its wheels on the apron (which starts at y 129). x is the window's left edge.
+  function airliner(g, x) {
+    var white = '#f4f4f4', shade = '#d8d8d8', blue = '#2a5aa8', glass = '#2c4a6a', r, y;
+    rect(g, x + 14, 129, 62, 1, '#6a6a6a');                                      // its shadow
+    // the landing gear, short legs under the nose and the wing
+    rect(g, x + 18, 123, 1, 3, '#5a5a5a'); rect(g, x + 17, 126, 3, 3, '#1a1a1a');
+    rect(g, x + 53, 124, 1, 2, '#5a5a5a'); rect(g, x + 51, 126, 5, 3, '#1a1a1a');
+    g.save();
+    g.translate(0, 3);                                                           // the rest sits on those legs
+    // the fin, leaning back and growing out of the top of the tail
+    for (r = 0; r < 16; r++) {
+      var l = x + 63 + Math.round(r * 0.6), rt = x + 77 + Math.round(r / 8);
+      rect(g, l, 109 - r, rt - l, 1, r < 2 ? '#3a6ab8' : blue);
+    }
+    // the body, with a rounded nose and the underside sweeping up to the tail
+    rect(g, x + 16, 110, 50, 10, white);
+    for (y = 0; y < 10; y++) {
+      var cut = Math.round(Math.max(0, Math.abs(y - 5.5) - 2.5) * 1.4);
+      rect(g, x + 10 + cut, 110 + y, 6 - cut, 1, white);
+    }
+    for (r = 0; r < 14; r++) rect(g, x + 66 + r, 110, 1, Math.max(2, 10 - Math.round(r * 0.6)), r > 10 ? shade : white);
+    rect(g, x + 14, 119, 52, 1, shade);
+    rect(g, x + 12, 116, 58, 1, blue);                                           // the cheatline
+    rect(g, x + 12, 112, 3, 2, glass); rect(g, x + 11, 113, 1, 1, glass);        // the cockpit
+    for (var wv = x + 20; wv < x + 64; wv += 4) rect(g, wv, 113, 2, 1, glass);   // the windows
+    rect(g, x + 18, 112, 2, 4, '#c8c8c8');                                       // the door
+    rect(g, x + 70, 113, 10, 2, shade);                                          // the tailplane
+    // the wing, swept back, with an engine slung under it
+    for (r = 0; r < 3; r++) rect(g, x + 34 + r * 3, 118 + r, 20 - r * 2, 1, '#b8b8b8');
+    rect(g, x + 33, 121, 10, 4, shade); rect(g, x + 33, 121, 10, 1, white); rect(g, x + 33, 122, 1, 2, '#5a5a5a');
+    g.restore();
+  }
+
   function terminal(w) {
     var h = 216, c = mk(w, h), g = c.getContext('2d');
     rect(g, 0, 0, w, h, '#e0e0dc');
@@ -1783,13 +1902,7 @@
       for (var y = 0; y < 96; y++) rect(g, x + 3, 33 + y, 82, 1, y < 50 ? '#9ac8f0' : '#b8dcf4');
       rect(g, x + 3, 129, 82, 18, '#7a7a7a');
       rect(g, x + 3, 136, 82, 1, '#f0e080');
-      if (n % 3 === 0) {
-        rect(g, x + 10, 112, 64, 10, '#f4f4f4');
-        disc(g, x + 10, 117, 4, 5, '#f4f4f4');
-        for (var t = 0; t < 14; t++) rect(g, x + 62 + Math.round(t * 0.6), 98 + t, 10 - Math.round(t * 0.4), 1, '#2a5aa8');
-        rect(g, x + 30, 120, 26, 3, '#c8c8c8');
-        for (var wv = x + 16; wv < x + 60; wv += 5) rect(g, wv, 114, 2, 2, '#2c4a6a');
-      }
+      if (n % 3 === 0) airliner(g, x);
       rect(g, x + 43, 30, 3, 120, '#3a3a40');
     }
     rect(g, 0, 150, w, 42, '#c8c8c4');
@@ -2050,10 +2163,10 @@
   // Boxers without the arms hanging at their sides: the ring scene draws the
   // arms and gloves itself, up in a guard or out in a punch, so they stay
   // attached to the shoulders.
-  var BOX_TORSO = BIG_TORSO.slice(0, 5).concat(['......RRRRRR....', '......RRRRRR....', '......RRRRRR....'], BIG_TORSO.slice(8));
   var boxer = { magnio: {} };
   ['stand', 'walk1', 'walk2'].forEach(function (f) {
-    boxer.magnio[f] = pair(BIG_HEAD.concat(BOX_TORSO, BIG_LEGS[f]), merge(BASE, CHARS.magnio.fire), 'boxer magnio ' + f);
+    var armless = TRACK_TORSO.slice(0, 3).concat(['...TTTTTTTTTTT..', '......YYYYYY....', '......VVVVVV....', '......VVVVVV....', '......UUUUUU....'], TRACK_TORSO.slice(8));
+    boxer.magnio[f] = pair(BIG_HEAD.concat(armless, BIG_LEGS[f]), merge(BASE, CHARS.magnio.track), 'boxer magnio ' + f);
   });
   var BOX_COAT = BODIES.coat.slice(0, 5).concat(['......CcCC......', '......CcCC......', '......CcCC......'], BODIES.coat.slice(8));
   boxer.skurk = pair(HEADS.fedora.concat(BOX_COAT), merge({ S: '#f8c088', P: '#e8946a', K: '#141414', H: '#5a3a1a' }, PEOPLE.skurk.pal), 'boxer skurk');
@@ -2145,6 +2258,41 @@
   }
   var gut = gutTable();
   npc.sloyebord = { r: gut, l: gut };
+
+  // Maharaja, the Indian restaurant in Moraira: white with a red and gold
+  // sign, a little golden dome, and warm light in its arched door and windows.
+  function restaurant() {
+    var w = 72, h = 60, c = mk(w, h), g = c.getContext('2d'), x, y;
+    disc(g, 36, 9, 7, 6, '#d8a838'); disc(g, 34, 7, 2, 2, '#f0d070');
+    rect(g, 35, 0, 2, 3, '#d8a838');
+    rect(g, 0, 14, w, h - 14, '#f4ecdc');
+    rect(g, 0, 13, w, 3, '#d8a838'); rect(g, 0, 16, w, 1, '#a87818');
+    rect(g, 6, 19, 60, 13, '#d8a838'); rect(g, 7, 20, 58, 11, '#8a1e2a');
+    SM.font.draw(g, 'MAHARAJA', 13, 22, '#f0c848');
+    // arched door and windows, in the Mughal way
+    function arch(ax, ay, aw, ah, fill) {
+      for (y = 0; y < ah; y++) {
+        var half = y < aw / 2 ? Math.round(aw / 2 * Math.sqrt(1 - Math.pow(1 - y / (aw / 2), 2))) : aw / 2;
+        rect(g, ax + aw / 2 - half - 1, ay + y, half * 2 + 2, 1, '#d8a838');
+        if (half > 0) rect(g, ax + aw / 2 - half, ay + y + 1, half * 2, 1, fill);
+      }
+    }
+    arch(28, 36, 16, 24, '#f0b050');
+    rect(g, 31, 48, 10, 12, '#7a3a1a'); rect(g, 35, 48, 1, 12, '#5a2a10');
+    arch(8, 38, 12, 14, '#f8d070'); arch(52, 38, 12, 14, '#f8d070');
+    rect(g, 13, 41, 1, 11, '#d8a838'); rect(g, 57, 41, 1, 11, '#d8a838');
+    // a string of lanterns under the sign
+    for (x = 4; x < w - 2; x += 8) { rect(g, x, 33, 3, 3, x % 16 ? '#e84a3a' : '#f0c040'); }
+    rect(g, 2, 32, w - 4, 1, '#5a4a3a');
+    // pots of chili plants by the door
+    rect(g, 22, 54, 5, 6, '#b8603a'); disc(g, 24, 52, 3, 2, '#3a8a3a'); rect(g, 23, 51, 1, 1, '#e82020');
+    rect(g, 45, 54, 5, 6, '#b8603a'); disc(g, 47, 52, 3, 2, '#3a8a3a'); rect(g, 48, 51, 1, 1, '#e82020');
+    return c;
+  }
+  var maharaja = restaurant();
+  npc.indisk = { r: maharaja, l: maharaja };
+  // The tram at the start of Praha, which goes into town (src/byvandring.js).
+  npc.trikk = { r: decor.trikk, l: decor.trikk };
 
   // The café in Lillesand, where the quiz is: a white house with a striped
   // awning and a sign, and the host outside in a white shirt.
@@ -2253,13 +2401,14 @@
     rect(a, 4, 64, 16, 1, '#202020'); rect(a, 2, 63, 3, 1, '#202020');                          // mouth
     disc(a, 14, 57, 1, 1, '#101010');                                                           // eye
     disc(a, 30, 70, 6, 2, '#505050');                                                           // flipper
-    // Magnio on its back, one leg down its side, the glove raised high
+    // Magnio on its back, one leg down its side, the glove raised high. He is
+    // drawn facing right and then turned round, to face where the whale goes.
     var rider = fromRows(['................', '................', '................', '................', '................', '................']
-      .concat(STATUE_HEAD, STATUE_TORSO, RIDING_LEGS), merge(merge(BASE, CHARS.magnio.normal), { H: '#8a8478' }), 'statue rider');
+      .concat(STATUE_HEAD, STATUE_TORSO, RIDING_LEGS), merge(merge(BASE, CHARS.magnio.normal), { H: '#8a8478', B: '#f4f4f4', b: '#1f2f6a' }), 'statue rider'); // the statue keeps the old patterned jumper
     var rg = rider.getContext('2d');
     rect(rg, 13, 6, 2, 13, '#c8281c');                                                         // the raised arm
     rect(rg, 12, 1, 4, 5, '#a01818'); rect(rg, 12, 1, 3, 4, '#e83030');                       // and the glove
-    a.drawImage(rider, 30, 18);
+    a.drawImage(mirror(rider), 30, 18);                                                       // facing the head, like the whale
     bronze(art);
     g.drawImage(art, 0, 0);
     // the pedestal, with a gold plaque
@@ -2291,6 +2440,7 @@
   SM.art = {
     statue: statue(),
     boxer: boxer,
+    brood: brood,
     car: car,
     angel: angel(),
     helicopter: helicopter(),

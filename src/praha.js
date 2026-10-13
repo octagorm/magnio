@@ -1,6 +1,8 @@
 // Praha, the other place he and Tove rented out apartments. A side trip from
 // Værnes: the old town with the astronomical clock and the trams, then
-// Karlsbroa with its statues and the castle above the river.
+// Karlsbroa with its statues and the castle above the river. The tram at
+// the start goes into town, for a walk round the whole of Praha
+// (src/byvandring.js).
 (function () {
   var SM = window.SM = window.SM || {};
   SM.levelDefs = SM.levelDefs || {};
@@ -54,6 +56,13 @@
       column(124, 3);
 
       var npcs = [
+        { look: 'trikk', name: 'TRIKKEN', x: 6, still: true, game: 'byvandring', lines: [
+          'TRIKKEN INN TIL SENTRUM. DEN GÅR PÅ KRYSS OG TVERS GJENNOM HELE BYEN.'
+        ] },
+        { look: 'tove', name: 'TOVE', x: 12.5, lines: [
+          'SKA ME TA TRIKKEN INN TE BYEN, MAGNE?',
+          'DA KAN ME GÅ PÅ KRYSS OG TVERS. OG KJØPE SOKKER TE GUTTENE!'
+        ] },
         { look: 'professor', name: 'GUIDEN', x: 30, lines: [
           'VITEJTE! VELKOMMEN TIL PRAHA. DEN ASTRONOMISKE KLOKKA HAR GÅTT SIDEN 1410.',
           'EN MANN I FRAKK SPURTE MEG OM HVOR MYE EN RYTTERSTATUE VEIER. RAR TYPE.'
@@ -67,7 +76,7 @@
 
       var decor = [
         { kind: 'sign', x: 1, text: 'PRAHA' },
-        { kind: 'trikk', x: 4 }, { kind: 'praghus', x: 14 }, { kind: 'orloj', x: 26 }, { kind: 'praghus', x: 36 },
+        { kind: 'praghus', x: 14 }, { kind: 'orloj', x: 26 }, { kind: 'praghus', x: 36 },
         { kind: 'lykt', x: 24 }, { kind: 'lykt', x: 46 }, { kind: 'praghus', x: 50 },
         { kind: 'sign', x: 66, text: 'KARLSBROA' },
         { kind: 'rekkverk', x: 68 }, { kind: 'rekkverk', x: 70 }, { kind: 'helgen', x: 72 }, { kind: 'rekkverk', x: 73 },

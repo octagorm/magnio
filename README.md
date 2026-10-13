@@ -19,6 +19,11 @@ spor i saken. (Det er Gorm i forkledning. Han trengte verktøyet til en statue.)
 3. **Trondheim**: bryggene og Nidarosdomen over elva, universitetet,
    Bakklandet og Lykkens portal, der Tove venter. Hun gir ham boksehansker i
    stedet for sigaren, og brettet slutter når man har pratet med henne.
+   Langs elva popper sønnene hans ut, én etter én, fire i alt. De følger etter
+   ham på rekke som andunger og hopper der han hopper. De vokser mens han går,
+   og før universitetet er de voksne. Da sier de «HA DET, PAPPA!» og blir
+   igjen, og snart popper det ut andunger bak dem også, som følger dem fram
+   og tilbake. Alt dette er over lenge før Lykkens portal.
    Rett i starten står megleren utenfor Børsen. Snakker man med ham, blir det
    Trondheim Børs: seks rare aksjeselskaper løper om kapp, og Magnio satser
    kronene sine på ett av dem (opp og ned velger selskap, venstre og høyre
@@ -41,6 +46,27 @@ spor i saken. (Det er Gorm i forkledning. Han trengte verktøyet til en statue.)
 5. **Værnes**: flyplassen. Ved gatene velger man Moraira, Praha eller Lillesand
    (trykk opp eller △). Moraira og Praha er valgfrie sideturer der
    leietakerne betaler husleie. Lillesand fører historien videre.
+
+   I Moraira ligger den indiske restauranten Maharaja, og Tove står utenfor.
+   Inne velger Magnio retter fra bordet (venstre og høyre, ✕ spiser), og hver
+   gang han spiser, kommer kelneren med mer, og stadig mer. Vi ser ham fylles
+   opp av karri fra skoene og oppover, ett lag i hver farge for hver rett.
+   Når det når skuldrene, sier han stopp, og han og Tove går hjem langs
+   stranda om kvelden. □ stopper tidligere.
+
+   I starten av Praha står en trikk. Den kjører inn til byen, og så går Magnio
+   og Tove fritt rundt på et stort kart over Praha sett ovenfra, med Vltava,
+   Karlsbroa, slottet, Gamle torg, Wenceslasplassen, Petřín og mye mer. De er
+   bare noen få piksler høye. Trikker, biler, båter og turister ferdes rundt
+   dem, og når de går forbi severdighetene, kommenterer de dem. På Toves liste
+   står sokker til sønnene, blå glassting, en marionett og et granatsmykke, og
+   de kan også kjøpe trdelník og en halvliter på U Fleků (✕ ved butikken).
+   Det som kjøpes, flyr opp i lista. Hver halvliter gjør Magnio litt mer
+   bedugget en stund: byen gynger, han går ikke helt rett, og etter et par
+   ser han dobbelt.
+   Lanovka tar dem opp og ned Petřín. Når alt på lista er kjøpt, er de
+   fornøyde med handleturen, tar trikken og er tilbake i Praha-brettet.
+   □ tar trikken hjem før det.
 6. **Lillesand**: fra brygga, gjennom sentrum og opp til huset på Blåbæråsen.
    Aslak, Kathinka, Fride, Tellef og Asta er med underveis.
    På kafeen i sentrum er det quiz: «Vil du bli Magnionær?» Ti stadig
@@ -62,10 +88,12 @@ spor i saken. (Det er Gorm i forkledning. Han trengte verktøyet til en statue.)
    Vi ser ikke folka rundt bordet, bare det de sier, og jo større stykket blir,
    jo mer overdrevet blir utropene. Stykket kan bli større enn kaka, fatet,
    bordet og til slutt hele Norge. Det gjør ingenting. Til slutt danser
-   Magnio og Frodigi til funky musikk, og folk og dyr fra hele spillet kommer
-   inn og danser bak dem, mens hvalen nikker og synger med i bakgrunnen.
-   Av og til hopper noen inn i munnen på hvalen og blir blåst ut av
-   blåsehullet.
+   Magnio og Frodigi til funky musikk, med Tove ved Magnios venstre side, og
+   folk og dyr fra hele spillet kommer inn og danser bak dem, mens hvalen
+   nikker og synger med i bakgrunnen. Av og til hopper noen inn i munnen på
+   hvalen og blir blåst ut av blåsehullet. Når alle er kommet, danser de fire
+   sønnene over gulvet i en conga, hver med andungene sine bak seg, fram og
+   tilbake med jevne mellomrom.
 
 Mellom brettene er det et kart over Sør-Norge. Pilene flytter Magnio til
 stedet som ligger i den retningen, ✕ reiser dit, og □ viser sporene. Fremgang, kroner og spor
@@ -131,6 +159,8 @@ Replikkene skal høres ut som folk faktisk snakker:
 - Magne sier «i» for «jeg», og det gjør de andre på Harøya også.
 - Tove og Aslak snakker stavangersk: «eg», «me», «e» og «te», bløte konsonanter
   og presens uten -r («makrellen bide godt», «eg håbe»). Ikke for nynorsk.
+  Tove snakker en pen form for stavangersk: hun sier «spise», «sulten», «se»
+  og «ikke», ikke «ede», «svolten», «sjå» og «ikkje», men «heilt» for «helt».
 - Kathinka snakker kristiansandsk, med bløte konsonanter («uga», «ded»).
 - Barna snakker en blanding av kristiansandsk og østlandsk.
 
@@ -164,7 +194,8 @@ Tallene står øverst i `src/game.js`.
 - `src/game.js` har fysikken, fiendene, historien, kartet og tegningen.
 - `src/kjoretur.js` har kjøreturen på Harøya, `src/borsen.js` Trondheim Børs,
   `src/catan.js` Catan på Heim, `src/sloying.js` sløyingen av fisken og
-  `src/quiz.js` quizen på kafeen i Lillesand.
+  `src/quiz.js` quizen på kafeen i Lillesand, `src/indisk.js` den indiske
+  restauranten i Moraira og `src/byvandring.js` turen rundt i Praha.
 - `src/kake.js` har kakescenen etter rulleteksten, og `src/fest.js` dansen
   etter den.
 - `IDEER.md` samler idéer til flere minispill.

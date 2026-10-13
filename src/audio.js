@@ -118,7 +118,7 @@
   }
 
   // ---------------------------------------------------------------- music
-  // Six original tunes. Each bar is a chord plus eight eighth-note tokens
+  // Eight original tunes. Each bar is a chord plus eight eighth-note tokens
   // for the melody: a note, '-' to hold the one before, or '.' for a rest.
   // The melody is played with soft triangle and sine tones over a quiet bass
   // and chord pad, and everything goes through a low-pass filter so nothing
@@ -162,6 +162,16 @@
     quiz: { bpm: 120, lead: 'punchy', bass: 'drive', perc: true, bars: [
       ['Am', 'A4 . C5 . E5 . A5 .'], ['F', 'A5 - G5 F5 E5 - C5 .'], ['G', 'B4 . D5 . G5 . B5 .'], ['E', 'G#5 - - - E5 - . .'],
       ['Am', 'E5 E5 A5 . E5 E5 C6 .'], ['F', 'C6 - A5 . F5 - A5 .'], ['G', 'B5 - G5 . D5 - G5 .'], ['E', 'E5 - G#5 - B5 - . .']
+    ] },
+    // Swaying, in a scale with a wide step between F and G#, for the Indian restaurant in Moraira.
+    indisk: { bpm: 100, lead: 'warm', bass: 'half', perc: true, bars: [
+      ['E', 'E5 F5 G#5 - A5 G#5 F5 E5'], ['F', 'F5 - E5 F5 G#5 - F5 E5'], ['E', 'B4 - E5 - F5 E5 D5 C5'], ['E', 'B4 - - - E5 - . .'],
+      ['Dm', 'D5 F5 A5 - G#5 - F5 E5'], ['F', 'F5 G#5 A5 - B5 A5 G#5 F5'], ['E', 'G#5 - F5 E5 F5 - E5 D5'], ['E', 'E5 - - - - - . .']
+    ] },
+    // A polka, for walking round Praha.
+    praha: { bpm: 132, lead: 'punchy', bass: 'drive', perc: true, bars: [
+      ['C', 'E5 G5 E5 C5 G4 - C5 -'], ['G', 'D5 F5 D5 B4 G4 - B4 -'], ['G', 'D5 - E5 F5 G5 - F5 -'], ['C', 'E5 - D5 - C5 - . .'],
+      ['F', 'A5 - G5 F5 E5 - F5 -'], ['C', 'G5 - E5 C5 E5 - G5 -'], ['G', 'F5 - E5 - D5 - B4 -'], ['C', 'C5 - G4 - C5 - . .']
     ] },
     // Funky, for the dance at the very end: a bouncing octave bass and hi-hats.
     funk: { bpm: 112, lead: 'punchy', bass: 'funk', perc: 'funk', bars: [
@@ -254,7 +264,7 @@
     resume: resume,
     sfx: sfx,
     update: update,
-    // name picks the tune: 'main', 'hval', 'boks', 'bil', 'quiz' or 'funk'.
+    // name picks the tune: 'main', 'hval', 'boks', 'bil', 'quiz', 'indisk', 'praha' or 'funk'.
     startMusic: function (name) {
       if (name && SONGS[name]) song = SONGS[name];
       playing = true; step = 0; nextT = 0;

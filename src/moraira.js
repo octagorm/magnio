@@ -1,6 +1,7 @@
 // Moraira on the Costa Blanca, where he and Tove rented out apartments.
 // A side trip from Værnes: sand, palms, the turquoise sea and the Peñón on
-// the horizon. The tenant at the end pays the rent.
+// the horizon. Near the end is an Indian restaurant (src/indisk.js), and
+// the tenant at the end pays the rent.
 (function () {
   var SM = window.SM = window.SM || {};
   SM.levelDefs = SM.levelDefs || {};
@@ -56,6 +57,12 @@
           'HOLA, MAGNE! APPELSINENE ER MODNE I ÅR.',
           'EN MANN I FRAKK HER I VARMEN? NEI, DET HAR JEG IKKE SETT. HAN MÅTTE I SÅ FALL HA SVETTET!'
         ] },
+        { look: 'indisk', name: 'MAHARAJA', x: 123, still: true, game: 'indisk', lines: [
+          'MAHARAJA, INDISK RESTAURANT. DET LUKTER KARRI HELT NED PÅ STRANDA.'
+        ] },
+        { look: 'tove', name: 'TOVE', x: 128.6, lines: [
+          'EG E SÅ SULTEN, MAGNE. SKA ME GÅ PÅ INDISK?'
+        ] },
         { look: 'student', name: 'LEIETAKEREN', x: 132, ends: true, pays: 50, clue: 'TEGNING AV EN HVAL MED RYTTER', lines: [
           'HOLA, SENOR MAGNE! LEILIGHETEN ER HELT FANTASTISK.',
           'HER ER HUSLEIEN. MUCHAS GRACIAS!',
@@ -70,7 +77,7 @@
         { kind: 'palmeHoy', x: 56 }, { kind: 'villa', x: 62 }, { kind: 'palme', x: 68 }, { kind: 'parasoll', x: 74 },
         { kind: 'villa', x: 80 }, { kind: 'palme', x: 90 },
         { kind: 'palmeHoy', x: 100 }, { kind: 'parasoll', x: 104 }, { kind: 'villa', x: 108 }, { kind: 'palme', x: 116 },
-        { kind: 'villa', x: 124 }, { kind: 'leilighet', x: 135 }, { kind: 'palmeHoy', x: 141 },
+        { kind: 'leilighet', x: 135 }, { kind: 'palmeHoy', x: 141 },
         { kind: 'seilbat', x: 20 }, { kind: 'bat', x: 70 }, { kind: 'seilbat', x: 115 },
         { kind: 'gull', x: 25, y: 3 }, { kind: 'gull', x: 85, y: 4 }
       ];

@@ -1,10 +1,12 @@
 // The very last screen, after the cake: Magnio and Frodigi dance to a funky
-// tune, and one by one the people and animals from the game come in and
-// dance behind them, with the whale nodding along at the back. Every few
-// bars people change moves, wander to a new spot, or pop out for a while and
-// come back. Three couples dance together, and now and then someone jumps
-// into the whale's mouth and is blown out of the blowhole. It goes on until
-// someone presses ✕.
+// tune, with Tove beside Magnio on his left, and one by one the people and
+// animals from the game come in and dance behind them, with the whale
+// nodding along at the back. Every few bars people change moves, wander to
+// a new spot, or pop out for a while and come back. Three couples dance together, and now and then someone jumps
+// into the whale's mouth and is blown out of the blowhole. Once everyone is
+// there, Magnio's four sons come dancing across the floor in a conga line,
+// each with his ducklings behind him, as in Trondheim, back and forth every
+// so often. It goes on until someone presses ✕.
 (function () {
   var SM = window.SM = window.SM || {};
   var F = SM.font, AU = SM.audio, A = SM.art;
@@ -20,7 +22,7 @@
   // them once both are there. The animals each have their own spot and
   // their own way of moving.
   var GUESTS = [
-    { look: 'tove', x: 120, row: 1 }, { look: 'aslak', x: 36, row: 1, partner: 'kathinka' }, { look: 'kathinka', x: 54, row: 1 },
+    { look: 'aslak', x: 36, row: 1, partner: 'kathinka' }, { look: 'kathinka', x: 54, row: 1 },
     { look: 'fride', x: 262, row: 1, partner: 'asta' }, { look: 'asta', x: 280, row: 1 }, { look: 'tellef', x: 330, row: 1 },
     { animal: 'sau', x: 26 }, { look: 'jonas', x: 140, row: 0, partner: 'hvalfanger' }, { look: 'hvalfanger', x: 158, row: 0 },
     { animal: 'fisk', x: 344 }, { look: 'fisker', x: 230, row: 0 }, { look: 'kone', x: 300, row: 0 },
@@ -28,7 +30,7 @@
     { animal: 'make' }, { animal: 'manet' }, { look: 'gorm', x: 14, row: 0 }
   ];
   var MOVES = ['hop', 'sway', 'spin', 'jump', 'shuffle'];
-  var PAIR_MOVES = ['swing', 'hands', 'hands', 'twirl'];
+  var PAIR_MOVES = ['swing', 'face', 'face', 'twirl'];
   var ROW_FEET = [150, 170];
   var FRONT_FEET = 206;
   // The whale at the back, facing the dancers, and its blowhole and mouth on screen.
@@ -37,12 +39,40 @@
   var COLORS = ['#ff4080', '#40c0ff', '#ffe040', '#80ff60', '#c060ff'];
   var TILES = ['#8a2450', '#24689a', '#8a7a1c', '#3a7a30', '#6a3090']; // dimmer, so the dancers stand out
 
+  var CONGA_FEET = 190, CONGA_SPEED = 0.7;   // between the rows and Magnio and Frodigi
+
   var S = null, env = null;
 
   function start(e) {
     env = e;
-    S = { t: 0, bar: 0, guests: [], confetti: [], whale: { open: 0, spout: 0, rider: null } };
+    S = { t: 0, bar: 0, guests: [], confetti: [], whale: { open: 0, spout: 0, rider: null }, conga: conga() };
     AU.startMusic('funk');
+  }
+
+  // The sons and their children in one long line, each son leading his
+  // own, as many as they got in Trondheim. gap is how far behind the one in
+  // front each of them walks.
+  function conga() {
+    var grand = SM.levelDefs.trondheim.build().brood.grand, line = [], len = 0;
+    for (var n = 0; n < A.brood.kids.length; n++) {
+      len += n ? 22 : 0;
+      line.push({ art: A.brood.kids[n].adult, at: len });
+      for (var j = 0; j < grand[n]; j++) { len += 14; line.push({ art: A.brood.grandOf(n, j), at: len, small: true }); }
+    }
+    return { line: line, len: len + 16, x: null, dir: 1, wait: 0 };
+  }
+
+  // Once everyone has arrived, the line comes in from the left, dances
+  // right across and out, waits a few bars, and comes back from the right.
+  function stepConga() {
+    var C = S.conga;
+    if (S.t < GUESTS.length * ARRIVE + 60) return;
+    if (C.wait > 0) { C.wait--; return; }
+    if (C.x === null) C.x = C.dir > 0 ? -8 : VW + 8;
+    C.x += C.dir * CONGA_SPEED;
+    if ((C.dir > 0 && C.x - C.len > VW + 8) || (C.dir < 0 && C.x + C.len < -8)) {
+      C.x = null; C.dir = -C.dir; C.wait = Math.round(BAR * 4);
+    }
   }
 
   function hash(a, b, c) {
@@ -156,7 +186,7 @@
     while (S.guests.length < Math.min(n, GUESTS.length)) {
       var g = GUESTS[S.guests.length], fromLeft = (g.x || 0) < VW / 2;
       var q = { def: g, i: S.guests.length, x: fromLeft ? -24 : VW + 8, home: g.x, row: g.row, state: 'walk',
-        move: MOVES[S.guests.length % MOVES.length], pairMove: 'hands' };
+        move: MOVES[S.guests.length % MOVES.length], pairMove: 'face' };
       if (g.animal) q.state = 'arrive';
       S.guests.push(q);
       // the second partner to arrive links the couple
@@ -185,6 +215,7 @@
     }
     for (i = 0; i < S.confetti.length; i++) S.confetti[i].y += S.confetti[i].vy;
     S.confetti = S.confetti.filter(function (c) { return c.y < VH; });
+    stepConga();
     if (S.t > 300 && (env.pressed('jumpP') || env.pressed('startP'))) env.done();
   }
 
@@ -288,13 +319,9 @@
       drawPerson(ctx, b.def.look, b.home, feet - hop(1, 3), true);
       return;
     }
-    // hand in hand, facing each other, bouncing on alternate beats
-    var ha = hop(0, 3), hb = hop(1, 3);
-    var la = drawPerson(ctx, a.def.look, a.home, feet - ha, false);
-    var lb = drawPerson(ctx, b.def.look, b.home, feet - hb, true);
-    var hy = Math.round(feet - Math.min(la.height, lb.height) * 0.42 - (ha + hb) / 2);
-    ctx.fillStyle = '#f8c088';
-    ctx.fillRect(Math.round(a.home) + 13, hy, Math.round(b.home - a.home) - 10, 2);
+    // facing each other, bouncing on alternate beats
+    drawPerson(ctx, a.def.look, a.home, feet - hop(0, 3), false);
+    drawPerson(ctx, b.def.look, b.home, feet - hop(1, 3), true);
   }
 
   function drawGuest(ctx, q, beat) {
@@ -347,17 +374,32 @@
     }
   }
 
-  // Magnio and Frodigi in front, mirroring each other through an eight-beat routine.
+  // Magnio and Frodigi in front, mirroring each other through an eight-beat
+  // routine, and Tove on Magnio's left, dancing with him from the start.
   function drawStars(ctx, beat) {
     var b = beat % 8, frame, h, flip;
     if (b < 4) { frame = b % 2 ? 'walk2' : 'walk1'; h = hop(0, 3); flip = b % 2; }
     else if (b < 6) { frame = 'jump'; h = hop(0, 9); flip = 0; }
     else { frame = 'stand'; h = hop(0, 2); flip = Math.floor(S.t / (BEAT / 2)) % 2; }
-    var who = [['magnio', 166, 1], ['frodigi', 202, -1]];
+    var who = [['tove', 140, -1], ['magnio', 166, 1], ['frodigi', 202, -1]];
     for (var i = 0; i < who.length; i++) {
-      var facing = (flip ? -1 : 1) * who[i][2];
-      var spr = A.player[who[i][0]].normal.big[frame][facing > 0 ? 'r' : 'l'];
+      var facing = (flip ? -1 : 1) * who[i][2], side = facing > 0 ? 'r' : 'l';
+      var spr = who[i][0] === 'tove' ? A.npc.tove[side] : A.player[who[i][0]].normal.big[frame][side];
       ctx.drawImage(spr, who[i][1], FRONT_FEET - spr.height - h);
+    }
+  }
+
+  // Everyone in the line bounces on the beat, the little ones twice as high,
+  // and every fourth beat the whole line kicks up together.
+  function drawConga(ctx, beat) {
+    var C = S.conga;
+    if (C.x === null) return;
+    var kick = beat % 4 === 3;
+    for (var i = C.line.length - 1; i >= 0; i--) {
+      var m = C.line[i], img = m.art[C.dir > 0 ? 'r' : 'l'], x = Math.round(C.x - C.dir * m.at - img.width / 2);
+      if (x < -20 || x > VW + 4) continue;
+      var lift = kick ? hop(0, m.small ? 8 : 6) : hop(i, m.small ? 4 : 2);
+      ctx.drawImage(img, x, CONGA_FEET - img.height - lift);
     }
   }
 
@@ -378,7 +420,13 @@
     }
     // back to front, so the nearer rows stand in front
     var order = S.guests.slice().sort(function (p, q) { return depth(p) - depth(q) || p.i - q.i; });
-    for (i = 0; i < order.length; i++) drawGuest(ctx, order[i], beat);
+    // the conga goes in front of the two rows of people, behind the rest
+    var drawn = false;
+    for (i = 0; i < order.length; i++) {
+      if (depth(order[i]) > 1 && !drawn) { drawConga(ctx, beat); drawn = true; }
+      drawGuest(ctx, order[i], beat);
+    }
+    if (!drawn) drawConga(ctx, beat);
     drawStars(ctx, beat);
     var text = 'GRATLA MED DAGEN, MAGNIO!';
     F.outline(ctx, text, Math.round((VW - F.width(text, 2)) / 2), 34, COLORS[beat % COLORS.length], 2, '#000');

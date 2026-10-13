@@ -1004,6 +1004,121 @@
     }
   }
 
+  // ---------------------------------------------------------------- the brood
+  // In Trondheim (brood: in the level file) Magnio's children pop out one
+  // by one and follow him in a line like ducklings, stepping exactly where
+  // he stepped, jumps and all. They grow as he walks, and once grown up they
+  // say goodbye and stay behind, pacing back and forth with ducklings of
+  // their own. Nothing here can be talked to or hurt.
+  var LAG = 9;         // how many steps of the trail lie between two ducklings
+
+  function makeBrood(cfg) {
+    return cfg ? { cfg: cfg, trail: [], dist: 0, next: 0, kids: [] } : null;
+  }
+
+  // Where Magnio has been: the middle of his feet, a point every step and a half.
+  function recordTrail(B) {
+    var p = G.players[0];
+    if (!p || p.state !== 'play' || p.y + p.h > GROUND_Y + 1) return;
+    var x = p.x + p.w / 2, b = p.y + p.h, last = B.trail[B.trail.length - 1];
+    if (last && Math.abs(last.x - x) + Math.abs(last.b - b) < 1.5) return;
+    if (last) B.dist += Math.abs(last.x - x);
+    B.trail.push({ x: x, b: b });
+  }
+
+  // Follow a trail like a duckling: start where one was born, wait for the
+  // line to pass, and then keep lag steps behind the one in front.
+  function trot(d, trail, lag) {
+    var target = trail.length - 1 - lag, from = d.i;
+    if (d.i < target) d.i = Math.min(target, d.i + 2);
+    var pt = trail[Math.max(0, Math.round(d.i))];
+    d.walking = d.i !== from;
+    if (pt.x !== d.x) d.left = pt.x < d.x;
+    d.x = pt.x; d.b = pt.b;
+  }
+
+  function flatAt(x) {
+    var tx = Math.floor(x / TS);
+    return tileAt(tx, 12) === '#' && !solidAt(tx, 11) && !solidAt(tx, 10);
+  }
+
+  function updateBrood() {
+    var B = G.brood, p = G.players[0], i, k;
+    if (!B || !p) return;
+    recordTrail(B);
+    var col = (p.x + p.w / 2) / TS, cfg = B.cfg, last = B.trail[B.trail.length - 1];
+    // a new one pops out as he passes each spot (unless he started further on)
+    if (B.next < cfg.at.length && col >= cfg.at[B.next] && last) {
+      if (col < cfg.at[B.next] + 4) {
+        B.kids.push({ n: B.next, i: B.trail.length - 1, x: last.x, b: last.b, born: B.dist, stage: 'baby', state: 'follow',
+          left: false, walking: false, pops: [], t: 0 });
+        puff(last.x, last.b - 8, 8);
+        addText(last.x, last.b - 30, 'POP!', '#ffe060');
+        AU.sfx('join');
+      }
+      B.next++;
+    }
+    var rank = 0;   // those who have left the line leave no gap in it
+    for (i = 0; i < B.kids.length; i++) {
+      var d = B.kids[i];
+      if (d.state === 'follow') {
+        trot(d, B.trail, LAG * ++rank);
+        var age = (B.dist - d.born) / (cfg.grow * TS);
+        var stage = age < 0.3 ? 'baby' : age < 0.6 ? 'child' : age < 0.9 ? 'teen' : 'adult';
+        if (stage !== d.stage) { d.stage = stage; puff(d.x, d.b - 12, 5); AU.sfx('sprout'); }
+        // grown up: say goodbye, as soon as there is flat ground to stand on
+        if (stage === 'adult' && Math.abs(d.b - GROUND_Y) < 0.5 && flatAt(d.x - 6) && flatAt(d.x + 6)) {
+          d.state = 'home';
+          d.b = GROUND_Y;
+          d.x0 = d.x1 = d.x;
+          for (k = 0; k < 40 && flatAt(d.x0 - 8); k++) d.x0 -= 1;
+          for (k = 0; k < 40 && flatAt(d.x1 + 8); k++) d.x1 += 1;
+          d.trail = [{ x: d.x, b: d.b }];
+          d.dir = d.left ? -1 : 1;
+          addText(d.x, d.b - 34, 'HA DET, PAPPA!', '#c0e0ff');
+          AU.sfx('talk');
+        }
+      } else {
+        // at home: pacing back and forth, with a new duckling now and then
+        d.t++;
+        if (d.x1 > d.x0) {
+          d.x += d.dir * 0.4;
+          if (d.x <= d.x0) { d.x = d.x0; d.dir = 1; }
+          if (d.x >= d.x1) { d.x = d.x1; d.dir = -1; }
+          d.left = d.dir < 0;
+          d.walking = true;
+          var lt = d.trail[d.trail.length - 1];
+          if (Math.abs(lt.x - d.x) >= 1) d.trail.push({ x: d.x, b: d.b });
+        }
+        if (d.pops.length < cfg.grand[d.n] && d.t === 50 + d.pops.length * 50) {
+          d.pops.push({ g: A.brood.grandOf(d.n, d.pops.length), i: d.trail.length - 1, x: d.x, b: d.b, left: d.left, walking: false });
+          puff(d.x, d.b - 6, 6);
+          addText(d.x, d.b - 34, 'POP!', '#ffe060');
+          AU.sfx('sprout');
+        }
+        for (k = 0; k < d.pops.length; k++) trot(d.pops[k], d.trail, LAG * (k + 1));
+      }
+    }
+  }
+
+  function drawBrood(cx) {
+    var B = G.brood;
+    if (!B) return;
+    function one(img, d, hop) {
+      var x = Math.round(d.x - img.width / 2 - cx);
+      if (x < -20 || x > VW + 4) return;
+      ctx.drawImage(img, x, Math.round(d.b - img.height + OFFY - hop));
+    }
+    for (var i = B.kids.length - 1; i >= 0; i--) {
+      var d = B.kids[i], hop = d.walking ? (G.t >> 3) & 1 : 0;
+      for (var k = d.pops.length - 1; k >= 0; k--) {
+        var g = d.pops[k];
+        one(g.g[g.left ? 'l' : 'r'], g, g.walking ? (G.t >> 2) & 1 : 0);
+      }
+      one(A.brood.kids[d.n][d.stage][d.left ? 'l' : 'r'], d, hop);
+    }
+  }
+
   // ---------------------------------------------------------------- camera
   // The camera follows Magnio. He can walk freely inside a calm zone in the
   // middle of the screen; the camera only moves when he walks out of it, so
@@ -1443,9 +1558,10 @@
   // Minigames started by talking to someone in a level (game: in the level
   // file): the drive round Harøya (src/kjoretur.js), Trondheim Børs
   // (src/borsen.js), Catan at Heim (src/catan.js), gutting Tove's catch on
-  // the jetty at Heim (src/sloying.js) and the quiz in the café in Lillesand
-  // (src/quiz.js). Afterwards the level carries on where it was.
-  var MINIGAMES = { drive: 'drive', bors: 'stock', catan: 'catan', sloye: 'gut', quiz: 'quiz' };
+  // the jetty at Heim (src/sloying.js), the quiz in the café in Lillesand
+  // (src/quiz.js), the Indian restaurant in Moraira (src/indisk.js) and the
+  // walk round Praha (src/byvandring.js). Afterwards the level carries on where it was.
+  var MINIGAMES = { drive: 'drive', bors: 'stock', catan: 'catan', sloye: 'gut', quiz: 'quiz', indisk: 'curry', byvandring: 'city' };
   function startMinigame(name, extra) {
     var p1 = G.players[0];
     G.state = 'minigame';
@@ -1511,9 +1627,9 @@
     else if (B.mag === 'dodge') guard = { back: [12, 9], front: [15, 9] };
     var flash = B.mag === 'hurt' && (G.t >> 2) & 1;
     if (!flash) {
-      boxArm(mx, my, 5, 14, guard.back[0], guard.back[1], '#c8c8c0', '#a01818', 1);
+      boxArm(mx, my, 5, 14, guard.back[0], guard.back[1], '#1a3290', '#a01818', 1);
       ctx.drawImage(A.boxer.magnio[legs].r, mx, my, 48, 96);
-      boxArm(mx, my, 11, 14, guard.front[0], guard.front[1], '#f0f0ea', '#d82020', 1);
+      boxArm(mx, my, 11, 14, guard.front[0], guard.front[1], '#2448c8', '#d82020', 1);
     }
 
     // the opponent, facing left
@@ -1660,7 +1776,7 @@
     }
     var hop = Math.abs(Math.round(Math.sin(G.t / 8) * 3));
     ctx.drawImage(A.statue, VW - 104, VH - 106);
-    ctx.drawImage(A.player.magnio.fire.big.stand.r, 24, VH - 36 - hop);
+    ctx.drawImage(A.player.magnio.normal.big.stand.r, 24, VH - 36 - hop);
     if (G.credits.t > 340 && (G.t >> 5) & 1) F.draw(ctx, X, VW - 14, 6, '#ffffff');
   }
 
@@ -1719,6 +1835,7 @@
       return !stuck;
     }).map(function (e) { return makeEnemy(e.type, e.x, e.y); });
     G.npcs = (L.npcs || []).map(makeNpc);
+    G.brood = makeBrood(L.brood);
     G.trees = (L.trees || []).map(function (t) { return { x: t.x * TS, kind: t.kind || 'pine', state: 'stand', ang: 0, dir: 1, t: 0 }; });
     G.boats = (L.boats || []).map(function (b) {
       return { x: b.from * TS, x0: b.from * TS, x1: b.to * TS, y: GROUND_Y + 2, w: 58, dir: 1, wait: 60, dx: 0 };
@@ -1884,6 +2001,7 @@
     updateShots();
     updateTrees();
     updateNpcs();
+    updateBrood();
     if (!G.end) { collidePlayers(); checkEnding(); }
 
     if (G.L.bubbles && G.t % 18 === 0) {
@@ -2212,16 +2330,22 @@
     if (p.inv > 0 && p.state === 'play' && G.freeze === 0 && (G.t >> 2) & 1) return;
     var growing = G.freeze > 0 && p.growT !== 0;
     var big = growing ? ((G.t >> 2) & 1) === 0 : p.power > 0;
-    var variant = p.star > 0 ? 'star' + (Math.floor(G.t / 3) % 3) : (p.power === 2 ? 'fire' : 'normal');
-    var spr = playerSprite(p.ch, big ? 1 : 0, variant, playerFrame(p), p.facing);
+    var gloves = p.power === 2 && !growing && G.save.gloves;
+    var variant = p.star > 0 ? 'star' + (Math.floor(G.t / 3) % 3) : (p.power === 2 ? (gloves ? 'track' : 'fire') : 'normal');
+    var frame = playerFrame(p);
+    var spr = gloves ? A.player[p.ch][variant].suit[frame][p.facing > 0 ? 'r' : 'l']
+      : playerSprite(p.ch, big ? 1 : 0, variant, frame, p.facing);
     var sx = Math.round(p.x - 2 - cx), sy = Math.round(p.y + p.h - spr.height + OFFY);
     ctx.drawImage(spr, sx, sy);
-    if (p.power === 2 && !growing && G.save.gloves) {
-      // red boxing gloves on both hands; the front one reaches out when punching
-      var hy = big ? 17 : 9, reach = p.punchT > 0 ? 4 : 0;
-      var front = p.facing > 0 ? sx + 12 + reach : sx + 1 - reach, back = p.facing > 0 ? sx + 1 : sx + 12;
-      ctx.fillStyle = '#a01818'; ctx.fillRect(back, sy + hy, 4, 4); ctx.fillRect(front, sy + hy, 4, 4);
-      ctx.fillStyle = '#e83030'; ctx.fillRect(back, sy + hy, 3, 3); ctx.fillRect(front, sy + hy, 3, 3);
+    if (gloves) {
+      // red boxing gloves on both hands, each one centred on its hand, so
+      // they swap over exactly when he turns round. The front one reaches
+      // out when he punches, and goes up with his fist when he jumps.
+      var right = p.facing > 0, reach = p.punchT > 0 ? 4 : 0, up = frame === 'jump';
+      var front = up ? (right ? sx + 12 : sx) : right ? sx + 13 + reach : sx - 1 - reach, back = right ? sx + 1 : sx + 11;
+      var fy = sy + (up ? 11 : 17), by = sy + 17;
+      ctx.fillStyle = '#a01818'; ctx.fillRect(back, by, 4, 4); ctx.fillRect(front, fy, 4, 4);
+      ctx.fillStyle = '#e83030'; ctx.fillRect(back, by, 3, 3); ctx.fillRect(front, fy, 3, 3);
     } else if (p.power === 2 && !growing) {
       // the cigar, drawn on top of the moustache
       var row = big ? 9 : 6;
@@ -2384,6 +2508,7 @@
     if (G.end && G.end.type === 'finale') drawFinaleWorld(cx);
     drawWhale(cx);
     for (i = 0; i < G.npcs.length; i++) drawNpc(G.npcs[i], cx);
+    drawBrood(cx);
     for (i = 0; i < G.items.length; i++) if (!(G.items[i].emerging > 0)) drawItem(G.items[i], cx);
     for (i = 0; i < G.enemies.length; i++) drawEnemy(G.enemies[i], cx);
     for (i = 0; i < G.players.length; i++) drawPlayer(G.players[i], cx);
@@ -2659,6 +2784,12 @@
     }
     if (id === 'trondheim') {
       SHORTCUTS.push(['borsen', 'Børsen i Trondheim', function () { atMinigame('trondheim', 'bors'); }]);
+    }
+    if (id === 'moraira') {
+      SHORTCUTS.push(['indisk', 'Den indiske restauranten i Moraira', function () { atMinigame('moraira', 'indisk'); }]);
+    }
+    if (id === 'praha') {
+      SHORTCUTS.push(['byvandring', 'Praha på kryss og tvers', function () { atMinigame('praha', 'byvandring'); }]);
     }
     if (id === 'lillesand') {
       SHORTCUTS.push(['quiz', 'Quizen på kafeen i Lillesand', function () { atMinigame('lillesand', 'quiz'); }]);
