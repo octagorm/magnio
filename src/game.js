@@ -106,6 +106,8 @@
 
   // ?x=150 starts the first level played at that tile column, for testing.
   var startCol = parseInt((/[?&]x=(\d+)/.exec(location.search) || [])[1], 10);
+  // ?til=kart and the like jump straight to a scene; ?snarvei lists them all.
+  var shortcut = (/[?&]til=([\w-]+)/.exec(location.search) || [])[1] || null;
 
   // ---------------------------------------------------------------- saving
   // Progress lives in this browser only. ?ny in the address starts over.
@@ -124,6 +126,7 @@
     return s;
   }
   function writeSave() {
+    if (shortcut) return; // a shortcut never touches the real save
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(G.save)); } catch (e) { /* no storage */ }
   }
   G.save = loadSave();
@@ -906,7 +909,7 @@
   }
 
   function startWhale() {
-    G.end = { type: 'whale', phase: 'rise', t: 0, wy: GROUND_Y + 30, open: false };
+    G.end = { type: 'whale', phase: 'rise', t: 0, wy: GROUND_Y + 30, jaw: 0 };
     AU.stopMusic();
     freezePlayers('cut');
   }
@@ -1010,7 +1013,7 @@
         E.wy -= 1.2;
         if (E.wy <= GROUND_Y - 74) { E.phase = 'open'; E.t = 0; }
       } else if (E.phase === 'open') {
-        E.open = true;
+        E.jaw = Math.min(26, E.jaw + 1.2);
         if (E.t === 1) AU.sfx('gulp');
         if (E.t > 25) { E.phase = 'suck'; E.t = 0; }
       } else if (E.phase === 'suck') {
@@ -1023,8 +1026,9 @@
           q.anim += 0.3;
           if (Math.abs(q.x - mx) < 6 || E.t > 100) q.state = 'gone'; else left++;
         }
-        if (!left) { E.phase = 'dive'; E.t = 0; E.open = false; }
+        if (!left) { E.phase = 'dive'; E.t = 0; }
       } else if (E.phase === 'dive') {
+        E.jaw = Math.max(0, E.jaw - 2);
         if (E.t > 20) E.wy += 1.5;
         if (E.t === 21) splash(wx + 80, GROUND_Y + 4);
         if (E.wy > GROUND_Y + 40) { E.phase = 'dark'; E.t = 0; }
@@ -1241,7 +1245,20 @@
 
   function stepCredits() {
     G.credits.t++;
-    if (G.credits.t > 340 && (anyPressed('jumpP') || anyPressed('startP'))) toTitle();
+    if (G.credits.t > 340 && (anyPressed('jumpP') || anyPressed('startP'))) startCake();
+  }
+
+  // After the credits, as in the films: Magne helps himself to cake (src/kake.js),
+  // and then everyone dances (src/fest.js).
+  function startCake() {
+    G.state = 'cake';
+    G.credits = null;
+    SM.cake.start({ pressed: anyPressed, done: startParty });
+  }
+
+  function startParty() {
+    G.state = 'party';
+    SM.party.start({ pressed: anyPressed, done: function () { AU.stopMusic(); toTitle(); } });
   }
 
   // ---------------------------------------------------------------- drawing the finale
@@ -1654,6 +1671,8 @@
     else if (G.state === 'play') stepPlay();
     else if (G.state === 'box') stepBox();
     else if (G.state === 'credits') stepCredits();
+    else if (G.state === 'cake') SM.cake.step();
+    else if (G.state === 'party') SM.party.step();
   }
 
   // ---------------------------------------------------------------- drawing: world
@@ -1855,7 +1874,7 @@
   function drawWhale(cx) {
     var E = G.end;
     if (!E || E.type !== 'whale') return;
-    ctx.drawImage(E.open ? A.whale.open : A.whale.closed, Math.round(G.L.ending.whaleX - cx), Math.round(E.wy + OFFY));
+    A.drawWhale(ctx, Math.round(G.L.ending.whaleX - cx), Math.round(E.wy + OFFY), Math.round(E.jaw), 0);
   }
 
   // After the blowhole: the whale seen from outside, with Magnio flying high.
@@ -1868,7 +1887,7 @@
     ctx.fillStyle = A.WATER_DEEP;
     ctx.fillRect(0, SEA_Y + 56 + OFFY, VW, VH);
     var wx = 150, wy = 150;
-    ctx.drawImage(A.whale.closed, wx, wy);
+    ctx.drawImage(A.whale, wx, wy);
     ctx.fillStyle = '#e8f6ff';
     for (var i = 0; i < 14; i++) {
       var h = (G.t * 2 + i * 23) % 70;
@@ -2311,6 +2330,8 @@
     if (G.state === 'map') { drawMap(); return; }
     if (G.state === 'box') { drawRingScene(); return; }
     if (G.state === 'credits') { drawCredits(); return; }
+    if (G.state === 'cake') { SM.cake.draw(ctx); return; }
+    if (G.state === 'party') { SM.party.draw(ctx); return; }
     if (G.end && G.end.type === 'fly' && G.fade >= 1) { drawFlight(); return; }
     if (G.end && G.end.type === 'spout' && (G.end.phase === 'flash' || G.end.phase === 'clear')) drawOutside();
     else renderWorld();
@@ -2329,6 +2350,72 @@
       ctx.globalAlpha = 1;
       if (!white && G.fade >= 1) centered('SLUKT!', 100, '#ffffff', 2);
     }
+  }
+
+  // ---------------------------------------------------------------- shortcuts
+  // For testing: ?snarvei shows a page of links straight to each scene, and
+  // ?til=<name> follows one. Nothing is saved while a shortcut is in use, so
+  // the real progress in this browser stays as it was.
+  function finishedSave() {
+    var s = freshSave(), all = ORDER.concat(SIDE);
+    for (var i = 0; i < all.length; i++) {
+      s.open[all[i]] = true;
+      s.done[all[i]] = true;
+      var npcs = levelDef(all[i]).build().npcs || [];
+      for (var j = 0; j < npcs.length; j++) if (npcs[j].clue && s.clues.indexOf(npcs[j].clue) < 0) s.clues.push(npcs[j].clue);
+    }
+    s.prologue = true;
+    s.gloves = true;
+    s.wallet[0] = { coins: 150, power: 2 }; // big, with boxing gloves
+    return s;
+  }
+
+  function atLillesandEnd() {
+    G.save = finishedSave();
+    startLevel('lillesand', 'kb1');
+    G.intro = 0;
+  }
+
+  var SHORTCUTS = [
+    ['tittel', 'Tittelskjermen', function () {}],
+    ['prolog', 'Prologen', function () { G.save = freshSave(); startStory(PROLOGUE, function () { toMap('haroya'); }); }],
+    ['kart', 'Kartet, ferdig: alt åpent og alle spor funnet', function () { G.save = finishedSave(); toMap('lillesand'); }]
+  ];
+  MAPLIST.forEach(function (id) {
+    SHORTCUTS.push([id, 'Brett: ' + levelDef(id).name.charAt(0) + levelDef(id).name.slice(1).toLowerCase(), function () {
+      G.save = finishedSave();
+      startLevel(id, 'kb1');
+    }]);
+  });
+  SHORTCUTS.push(
+    ['boksekamp', 'Boksekampen', function () { atLillesandEnd(); startBox(); }],
+    ['finale', 'Finalen med statuen', function () { atLillesandEnd(); startFinale(); }],
+    ['rulletekst', 'Rulleteksten', function () { G.save = finishedSave(); AU.startMusic('main'); startCredits(); }],
+    ['kake', 'Kakestykket etter rulleteksten', startCake],
+    ['fest', 'Dansen helt til slutt', startParty]
+  );
+
+  function runShortcut(name) {
+    for (var i = 0; i < SHORTCUTS.length; i++) if (SHORTCUTS[i][0] === name) { SHORTCUTS[i][2](); return; }
+    console.warn('no shortcut called ' + name + '; see ?snarvei');
+  }
+
+  function showShortcuts() {
+    autoFullscreen = false; // clicking a link should just follow it
+    canvas.style.display = 'none';
+    var page = document.createElement('div');
+    page.style.cssText = 'color:#f4f4f4;font:16px/1.6 ui-monospace,Menlo,monospace;padding:24px;max-width:640px;margin:auto;align-self:flex-start';
+    var html = '<h1 style="font-size:22px;color:#ffe060">Snarveier</h1>' +
+      '<p>Rett til en scene, for testing. Fremgangen lagres ikke når man bruker en snarvei.</p><ul>';
+    for (var i = 0; i < SHORTCUTS.length; i++) {
+      html += '<li><a style="color:#90d8ff" href="?til=' + SHORTCUTS[i][0] + '">' + SHORTCUTS[i][1] + '</a></li>';
+    }
+    html += '</ul><p>Andre ting i adressen: <code>?ny</code> starter på nytt, <code>?stille</code> slår av lyden, ' +
+      '<code>?windowed</code> hopper over fullskjerm og <code>?x=150</code> starter et brett ved kolonne 150. ' +
+      'De kan kombineres, for eksempel <code>?til=haroya&amp;x=150&amp;stille</code>.</p>';
+    page.innerHTML = html;
+    document.body.style.overflow = 'auto';
+    document.body.appendChild(page);
   }
 
   // ---------------------------------------------------------------- main loop
@@ -2377,6 +2464,8 @@
   });
 
   toTitle();
+  if (/[?&]snarvei\b/.test(location.search)) showShortcuts();
+  else if (shortcut) runShortcut(shortcut);
   var STEP = 1000 / 60, acc = 0, last = performance.now();
   function frame(now) {
     acc += Math.min(100, now - last);

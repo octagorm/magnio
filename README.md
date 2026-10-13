@@ -27,6 +27,15 @@ spor i saken. (Det er Gorm i forkledning. Han trengte verktøyet til en statue.)
    forkledningen, og det er Gorm. Et helikopter senker en rytterstatue av
    Magne på hval, med hockeysveis, flagget heises, og hele familien feirer:
    «Gratla med dagen, Magnio!» Til slutt kommer rulleteksten.
+8. **Etter rulleteksten**, som i Marvel-filmene: kaka sett ovenfra. Magne
+   bestemmer selv hvor stort stykket blir (venstre og høyre, ✕ forsyner seg).
+   Vi ser ikke folka rundt bordet, bare det de sier, og jo større stykket blir,
+   jo mer overdrevet blir utropene. Stykket kan bli større enn kaka, fatet,
+   bordet og til slutt hele Norge. Det gjør ingenting. Til slutt danser
+   Magnio og Frodigi til funky musikk, og folk og dyr fra hele spillet kommer
+   inn og danser bak dem, mens hvalen nikker og synger med i bakgrunnen.
+   Av og til hopper noen inn i munnen på hvalen og blir blåst ut av
+   blåsehullet.
 
 Mellom brettene er det et kart over Sør-Norge. Pilene flytter Magnio til
 stedet som ligger i den retningen, ✕ reiser dit, og □ viser sporene. Fremgang, kroner og spor
@@ -45,8 +54,11 @@ python3 -m http.server 8123
 Åpne deretter http://localhost:8123. I de fleste nettlesere går det også an å
 åpne `index.html` direkte.
 
-Legg til `?x=150` i adressen for å starte ved kolonne 150. Det er nyttig når
-man tester senere deler av brettet.
+`?snarvei` i adressen viser en side med lenker rett til hver scene: det
+ferdige kartet, hvert brett, boksekampen, finalen, rulleteksten, kaka og
+dansen. Fremgangen lagres ikke når man bruker en snarvei. Legg til `?x=150`
+for å starte et brett ved kolonne 150, for eksempel `?til=haroya&x=150`. Det er
+nyttig når man tester senere deler av brettet.
 
 ## Kontroller
 
@@ -106,3 +118,6 @@ Tallene står øverst i `src/game.js`.
 - `src/audio.js` har lydeffektene og bakgrunnsmusikken, som er en egen melodi.
 - `src/input.js` håndterer tastatur og kontroller.
 - `src/game.js` har fysikken, fiendene, historien, kartet og tegningen.
+- `src/kake.js` har kakescenen etter rulleteksten, og `src/fest.js` dansen
+  etter den.
+- `IDEER.md` samler idéer til flere minispill.

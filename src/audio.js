@@ -97,6 +97,7 @@
     flag: function (t) { osc(pulse25, 1400, 300, t, 1.0, 0.15, sfxBus); },
     boom: function (t) { noise(t, 0.5, 0.6, 400, sfxBus, 'lowpass'); },
     talk: function (t) { osc(pulse50, 660, 0, t, 0.04, 0.12, sfxBus); osc(pulse50, 880, 0, t + 0.05, 0.04, 0.1, sfxBus); },
+    cut: function (t) { noise(t, 0.06, 0.18, 2600, sfxBus, 'bandpass'); },
     gulp: function (t) { osc('triangle', 220, 50, t, 0.7, 0.6, sfxBus); noise(t, 0.6, 0.3, 300, sfxBus, 'lowpass'); },
     spout: function (t) { noise(t, 1.2, 0.5, 1500, sfxBus, 'bandpass'); osc(pulse25, 200, 1200, t, 0.8, 0.12, sfxBus); },
     clear: function (t) {
@@ -117,7 +118,7 @@
   }
 
   // ---------------------------------------------------------------- music
-  // Three original tunes. Each bar is a chord plus eight eighth-note tokens
+  // Four original tunes. Each bar is a chord plus eight eighth-note tokens
   // for the melody: a note, '-' to hold the one before, or '.' for a rest.
   // The melody is played with soft triangle and sine tones over a quiet bass
   // and chord pad, and everything goes through a low-pass filter so nothing
@@ -131,6 +132,7 @@
     F: { bass: ['F2', 'C3'], pad: ['F3', 'A3', 'C4'] },
     Dm: { bass: ['D3', 'A2'], pad: ['F3', 'A3', 'D4'] },
     E: { bass: ['E2', 'B2'], pad: ['G#3', 'B3', 'E4'] },
+    A: { bass: ['A2', 'E3'], pad: ['A3', 'C#4', 'E4'] },
     B: { bass: ['B2', 'F#2'], pad: ['B3', 'D#4', 'F#4'] }
   };
   var SONGS = {
@@ -150,6 +152,11 @@
     boks: { bpm: 132, lead: 'punchy', bass: 'drive', perc: true, bars: [
       ['Em', 'E5 - E5 G5 - E5 D5 -'], ['Em', 'E5 - - B4 D5 - E5 -'], ['C', 'G5 - G5 E5 - G5 A5 -'], ['D', 'F#5 - - D5 - - . .'],
       ['Em', 'E5 - E5 G5 - E5 D5 -'], ['Em', 'E5 - - B4 D5 - E5 -'], ['C', 'G5 - A5 - B5 - A5 G5'], ['B', 'F#5 - D#5 - B4 - . .']
+    ] },
+    // Funky, for the dance at the very end: a bouncing octave bass and hi-hats.
+    funk: { bpm: 112, lead: 'punchy', bass: 'funk', perc: 'funk', bars: [
+      ['Em', 'E5 . E5 G5 . A5 G5 E5'], ['A', '. C#5 E5 - D5 . B4 .'], ['Em', 'E5 . E5 G5 . B5 A5 G5'], ['A', 'A5 - . E5 . C#5 . .'],
+      ['G', 'D5 . D5 G5 . B5 . G5'], ['A', 'A5 . E5 . C#5 E5 A5 .'], ['Em', 'G5 - E5 . D5 E5 . B4'], ['B', 'D#5 - . F#5 . B5 . .']
     ] }
   };
   for (var sname in SONGS) {
@@ -200,14 +207,21 @@
     var m = song.mel[i];
     if (m !== '-' && m !== '.') lead(song.lead, nf(m), t, held(song.mel, i) * sd * 0.92);
     var pos = i % 8, ch = CHORD[song.chord[Math.floor(i / 8)]];
-    if (song.bass === 'half') {
+    if (song.bass === 'funk') {
+      var root = nf(ch.bass[0]), FUNK = [1, 0, 2, 1, 0, 1, 2, 1.5]; // root, rest, octave, ... fifth
+      if (FUNK[pos]) note('triangle', root * FUNK[pos], t, sd * 0.6, 0.36, 0.005, 0.04);
+    } else if (song.bass === 'half') {
       if (pos === 0) note('triangle', nf(ch.bass[0]), t, sd * 3.8, 0.34, 0.02, 0.15);
       if (pos === 4) note('triangle', nf(ch.bass[1]), t, sd * 3.8, 0.28, 0.02, 0.15);
     } else {
       note('triangle', nf(ch.bass[pos % 4 === 2 ? 1 : 0]), t, sd * 0.8, 0.3, 0.01, 0.05);
     }
     if (pos === 0) for (var k = 0; k < ch.pad.length; k++) note('sine', nf(ch.pad[k]), t, sd * 7.8, 0.045, 0.25, 0.6);
-    if (song.perc) {
+    if (song.perc === 'funk') {
+      noise(t, 0.04, 0.035, 7000, musicBus, 'highpass');
+      if (pos === 0 || pos === 5) note('sine', 80, t, 0.14, 0.4, 0.005, 0.12);
+      if (pos === 2 || pos === 6) noise(t, 0.12, 0.12, 1800, musicBus, 'bandpass');
+    } else if (song.perc) {
       if (pos === 0 || pos === 4) note('sine', 90, t, 0.12, 0.35, 0.005, 0.1);
       if (pos === 2 || pos === 6) noise(t, 0.08, 0.06, 1800, musicBus, 'bandpass');
     }
@@ -230,7 +244,7 @@
     resume: resume,
     sfx: sfx,
     update: update,
-    // name picks the tune: 'main', 'hval' or 'boks'.
+    // name picks the tune: 'main', 'hval', 'boks' or 'funk'.
     startMusic: function (name) {
       if (name && SONGS[name]) song = SONGS[name];
       playing = true; step = 0; nextT = 0;

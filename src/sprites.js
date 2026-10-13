@@ -1294,8 +1294,9 @@
     return c;
   }
 
-  // The whale itself, for the end of Harøya. Facing left, mouth shut or open.
-  function bigWhale(open) {
+  // The whale itself, for the end of Harøya, the view from outside and the
+  // dance at the very end. Facing left, mouth shut; drawWhale opens it.
+  function bigWhale() {
     var w = 176, h = 96, c = mk(w, h), g = c.getContext('2d');
     disc(g, 100, 60, 96, 40, '#1e2a38');
     disc(g, 100, 60, 94, 38, '#3a4a5c');
@@ -1307,17 +1308,33 @@
     disc(g, 59, 50, 2, 2, '#141414');
     rect(g, 118, 21, 6, 2, '#141a22');
     g.globalCompositeOperation = 'source-over';
-    if (open) {
-      for (var x = 4; x < 84; x++) {
-        var top = 63 + Math.round((x - 4) * 3 / 80);
-        var bottom = 66 + Math.round((84 - x) * 0.45);
-        rect(g, x, top, 1, bottom - top, '#c84a5a');
-        rect(g, x, bottom, 1, 3, '#3a4a5c');
-        if (x % 3 === 0) rect(g, x, top, 1, 3, '#e8e0c8');
-      }
-      disc(g, 50, 84, 22, 4, '#e07080');
-    }
     return c;
+  }
+  var whale = bigWhale();
+  var WHALE_JAW = 84, WHALE_PIVOT = 130;
+
+  // Draw the whale with its lower jaw dropped by `jaw` pixels at the front
+  // (0 is shut), showing the mouth, baleen and tongue inside, and its head
+  // dipped by `nod` pixels while the tail end stays put. It is drawn one
+  // column at a time, each moved by whole pixels, so the edges stay crisp.
+  function drawWhale(g, x, y, jaw, nod) {
+    var h = whale.height;
+    for (var cx = 0; cx < whale.width; cx++) {
+      var sx = x + cx, sy = y + (nod && cx < WHALE_PIVOT ? Math.round(nod * (WHALE_PIVOT - cx) / WHALE_PIVOT) : 0);
+      var gap = cx >= 4 && cx < WHALE_JAW ? Math.round(jaw * (WHALE_JAW - cx) / (WHALE_JAW - 4)) : 0;
+      if (!gap) { g.drawImage(whale, cx, 0, 1, h, sx, sy, 1, h); continue; }
+      var m = 63 + Math.round((cx - 6) * 3 / 76); // the mouth line
+      g.drawImage(whale, cx, 0, 1, m, sx, sy, 1, m);
+      g.fillStyle = '#5a1424';
+      g.fillRect(sx, sy + m, 1, gap);
+      var tongue = gap > 3 ? Math.max(2, Math.floor(gap / 4)) : 0;
+      if (tongue) {
+        g.fillStyle = '#c84a5a'; g.fillRect(sx, sy + m + gap - tongue, 1, tongue);
+        g.fillStyle = '#e07080'; g.fillRect(sx, sy + m + gap - tongue, 1, 1);
+      }
+      if (cx % 3 === 0) { g.fillStyle = '#e8e0c8'; g.fillRect(sx, sy + m, 1, Math.min(gap, gap > 8 ? 3 : 2)); } // baleen
+      g.drawImage(whale, cx, m, 1, h - m, sx, sy + m + gap, 1, h - m);
+    }
   }
 
   // ================================================================ people
@@ -2083,7 +2100,8 @@
     pragueSkyline: pragueSkyline,
     npc: npc,
     wharfRow: wharfRow,
-    whale: { closed: bigWhale(false), open: bigWhale(true) },
+    whale: whale,
+    drawWhale: drawWhale,
     mountains: mountains,
     ribs: ribs,
     player: player,
