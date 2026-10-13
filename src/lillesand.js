@@ -97,7 +97,10 @@
           'VI SKAL HA FILMKVELD I KVELD MED FARMOR. DET BLIR EN FILM MED ENHJØRNINGER. DU KAN SITTE VED SIA AV MEG.',
           'MANNEN I FRAKK SA AT DET VAR EN HEMMELIGHED. JEG ER KJEMPEFLINK TE Å HOLDE HEMMELIGHEDER!'
         ] },
-        { look: 'kathinka', name: 'KATHINKA', x: 112, lines: [
+        { look: 'kafevert', name: 'KAFEVERTEN', x: 110, game: 'quiz', lines: [
+          'VELKOMMEN TIL KAFEEN, MAGNE! I KVELD ER DET QUIZ: VIL DU BLI MAGNIONÆR?'
+        ] },
+        { look: 'kathinka', name: 'KATHINKA', x: 114, lines: [
           'HEI MAGNE! UNGENE HAR GLEDA SEG HELE UGA.',
           'IKKE SI NOE TE NOEN, MEN... NEI, GLEM DED. JEG HAR IKKE SAGT NOE!'
         ] },
@@ -137,15 +140,15 @@
         { kind: 'gull', x: 78, y: 3 }, { kind: 'gull', x: 104, y: 2 },
 
         { kind: 'hus3', x: 90 }, { kind: 'hus2', x: 96 }, { kind: 'kirke', x: 101 },
-        { kind: 'hus1', x: 106 }, { kind: 'hus2', x: 111 }, { kind: 'hus3', x: 115 },
+        { kind: 'kafe', x: 106 }, { kind: 'hus2', x: 111 }, { kind: 'hus3', x: 115 },
         { kind: 'hus1', x: 121 }, { kind: 'hus2', x: 126 }, { kind: 'hus1', x: 130 },
         { kind: 'stakitt', x: 91 }, { kind: 'stakitt', x: 97 }, { kind: 'stakitt', x: 107 },
         { kind: 'stakitt', x: 116 }, { kind: 'stakitt', x: 122 }, { kind: 'stakitt', x: 131 },
         { kind: 'lykt', x: 95 }, { kind: 'lykt', x: 105 }, { kind: 'lykt', x: 114 },
         { kind: 'lykt', x: 120 }, { kind: 'lykt', x: 133 },
 
-        { kind: 'pineTall', x: 143 }, { kind: 'sign', x: 145, text: 'BLÅBÆRÅSEN' },
-        { kind: 'svaberg', x: 156 }, { kind: 'pine', x: 158 }, { kind: 'bush2', x: 160 },
+        { kind: 'pineTall', x: 143 },
+        { kind: 'svaberg', x: 156 }, { kind: 'sign', x: 157, text: 'BLÅBÆRÅSEN' }, { kind: 'pine', x: 158 }, { kind: 'bush2', x: 160 },
         { kind: 'pineSmall', x: 165 }, { kind: 'bush1', x: 167 }, { kind: 'svabergSmall', x: 170 },
         { kind: 'pineTall', x: 172 }, { kind: 'pine', x: 176 }, { kind: 'bush3', x: 182 },
         { kind: 'svaberg', x: 190 }, { kind: 'pine', x: 193 }, { kind: 'bush2', x: 195 },

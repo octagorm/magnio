@@ -1279,7 +1279,7 @@
     G.save.gloves = true;
     writeSave();
     G.box = { phase: 'intro', t: 0, hp: 10, opp: 'guard', ot: 0, openLeft: 0, rt: 0, mag: 'idle', mt: 0, cool: 0,
-      msg: '', sub: '', msgT: 0, page: 0, shake: 0 };
+      msg: '', sub: '', msgT: 0, page: 0, shake: 0, mx: 70, ox: 250, moving: 0 };
     G.state = 'box';
     AU.stopMusic();
     AU.sfx('bell');
@@ -1301,16 +1301,26 @@
       return;
     }
     if (B.phase === 'fight') {
-      var dodge = anyPressed('leftP') || anyPressed('downP') || anyPressed('rightP');
+      // Magnio moves freely back and forth, ducks with down, and punches.
+      // A punch only lands from close enough, and stepping back out of
+      // reach dodges as well as ducking does.
+      var move = (anyPressed('right') ? 1 : 0) - (anyPressed('left') ? 1 : 0);
       var punch = anyPressed('jumpP') || anyPressed('fireP');
       if (B.mt > 0) B.mt--; else B.mag = 'idle';
       if (B.cool > 0) B.cool--;
-      if (dodge && B.mag !== 'hurt') { B.mag = 'dodge'; B.mt = 40; }
-      if (punch && B.cool === 0 && B.mag !== 'hurt') {
+      B.moving = B.mag === 'idle' || B.mag === 'punch' ? move : 0;
+      B.mx = Math.max(24, Math.min(B.ox - 52, B.mx + B.moving * 1.8));
+      if (anyPressed('downP') && B.mag !== 'hurt') { B.mag = 'dodge'; B.mt = 40; }
+      var gap = B.ox - (B.mx + 48);
+      if (punch && B.cool === 0 && B.mag !== 'hurt' && B.mag !== 'dodge') {
         B.mag = 'punch'; B.mt = 12; B.cool = 18;
-        if (B.opp === 'open' || B.opp === 'recoil') {
+        if (gap > BOX_REACH) {
+          AU.sfx('puff');
+          say('BOM!', 30, 'GÅ NÆRMERE');
+        } else if (B.opp === 'open' || B.opp === 'recoil') {
           B.hp--;
           B.opp = 'recoil'; B.rt = 14; B.shake = 8;
+          B.ox = Math.min(300, B.ox + 10);
           AU.sfx('punch');
           say(['PANG!', 'POW!', 'KLASK!', 'BANG!'][B.hp % 4], 30);
           if (B.hp <= 0) { B.phase = 'ko'; B.t = 0; AU.stopMusic(); AU.sfx('clear'); return; }
@@ -1319,15 +1329,22 @@
           say('BLOKK!', 25);
         }
       }
+      // He closes in to his favourite distance, a little bit at a time, and
+      // stays put while he is open.
+      if (B.opp !== 'open' && B.opp !== 'recoil') {
+        var want = B.mx + 48 + 20;
+        B.ox += Math.max(-0.7, Math.min(0.7, want - B.ox));
+      }
+      B.ox = Math.max(B.mx + 52, Math.min(300, B.ox));
       B.ot++;
       if (B.opp === 'guard') {
-        if (B.ot > 70) { B.opp = 'wind'; B.ot = 0; say('DUKK UNNA!', 55, '< ELLER NED'); }
+        if (B.ot > 70) { B.opp = 'wind'; B.ot = 0; say('DUKK UNNA!', 55, 'NED, ELLER GÅ BAKOVER'); }
       } else if (B.opp === 'wind') {
         if (B.ot > 55) { B.opp = 'punch'; B.ot = 0; }
       } else if (B.opp === 'punch') {
         if (B.ot === 6) {
-          if (B.mag === 'dodge') say('BOM!', 30, 'HAN BOMMET');
-          else { B.mag = 'hurt'; B.mt = 30; B.shake = 6; AU.sfx('hurt'); say('AU!', 30); }
+          if (B.mag === 'dodge' || B.ox - (B.mx + 48) > 50) say('BOM!', 30, 'HAN BOMMET');
+          else { B.mag = 'hurt'; B.mt = 30; B.shake = 6; B.mx = Math.max(24, B.mx - 12); AU.sfx('hurt'); say('AU!', 30); }
         }
         if (B.ot > 14) { B.opp = 'open'; B.ot = 0; B.openLeft = 130; say('SLÅ NÅ!', 60, X + ' ELLER ' + SQ); }
       } else if (B.opp === 'open' || B.opp === 'recoil') {
@@ -1425,10 +1442,10 @@
   // and then everyone dances (src/fest.js).
   // Minigames started by talking to someone in a level (game: in the level
   // file): the drive round Harøya (src/kjoretur.js), Trondheim Børs
-  // (src/borsen.js), Catan at Heim (src/catan.js), and gutting Tove's catch
-  // on the jetty at Heim (src/sloying.js). Afterwards the level carries on
-  // where it was.
-  var MINIGAMES = { drive: 'drive', bors: 'stock', catan: 'catan', sloye: 'gut' };
+  // (src/borsen.js), Catan at Heim (src/catan.js), gutting Tove's catch on
+  // the jetty at Heim (src/sloying.js) and the quiz in the café in Lillesand
+  // (src/quiz.js). Afterwards the level carries on where it was.
+  var MINIGAMES = { drive: 'drive', bors: 'stock', catan: 'catan', sloye: 'gut', quiz: 'quiz' };
   function startMinigame(name, extra) {
     var p1 = G.players[0];
     G.state = 'minigame';
@@ -1481,29 +1498,37 @@
     for (i = 0; i < 3; i++) { ctx.fillStyle = ropes[i]; ctx.fillRect(24, 104 + i * 16 + shake, 336, 2); }
     ctx.fillStyle = '#a0a0a8'; ctx.fillRect(20, 96 + shake, 6, 76); ctx.fillRect(358, 96 + shake, 6, 76);
 
-    // Magnio, three times the size, with gloves
-    var mx = 96, my = 172 - 96 + shake;
-    if (B.mag === 'dodge') { mx -= 26; my += 8; }
-    if (B.mag === 'hurt') mx -= 10;
-    var mspr = A.player.magnio.fire.big.stand.r;
-    if (!(B.mag === 'hurt' && (G.t >> 2) & 1)) ctx.drawImage(mspr, mx, my, 48, 96);
-    var reach = B.mag === 'punch' ? 44 : 0;
-    drawGlove(mx + 2, my + 46, '#d82020');
-    drawGlove(mx + 34 + reach, my + 40 - (reach ? 4 : 0), '#d82020');
+    // The two boxers, three times their size, bouncing on their toes. The
+    // arms are drawn from the shoulder to the glove, in the sprites' own
+    // three-pixel blocks, so the gloves stay attached.
+    var bob = Math.round(Math.abs(Math.sin(G.t / 8)) * 3);
+    var mx = Math.round(B.mx), my = 172 - 96 + shake - bob;
+    if (B.mag === 'dodge') my += 14;
+    var legs = B.moving ? (Math.floor(G.t / 7) % 2 ? 'walk1' : 'walk2') : (Math.floor(G.t / 16) % 2 ? 'stand' : 'walk2');
+    var guard = { back: [12, 13], front: [16, 11] };
+    if (B.mag === 'punch') guard = { back: [12, 13], front: [25, 12] };
+    else if (B.mag === 'hurt') guard = { back: [8, 18], front: [12, 19] };
+    else if (B.mag === 'dodge') guard = { back: [12, 9], front: [15, 9] };
+    var flash = B.mag === 'hurt' && (G.t >> 2) & 1;
+    if (!flash) {
+      boxArm(mx, my, 5, 14, guard.back[0], guard.back[1], '#c8c8c0', '#a01818', 1);
+      ctx.drawImage(A.boxer.magnio[legs].r, mx, my, 48, 96);
+      boxArm(mx, my, 11, 14, guard.front[0], guard.front[1], '#f0f0ea', '#d82020', 1);
+    }
 
-    // the opponent
-    var ox = 232, oy = 172 - 84 + shake;
+    // the opponent, facing left
+    var ox = Math.round(B.ox), oy = 172 - 84 + shake - Math.round(Math.abs(Math.sin(G.t / 8 + 1.6)) * 3);
     if (B.phase === 'ko' || B.phase === 'reveal') {
       drawUnmasked(ox, oy);
     } else {
-      if (B.opp === 'recoil') ox += 12;
-      ctx.drawImage(A.npc.skurk.l, ox, oy, 48, 84);
-      var gx = ox - 4, gy = oy + 26;
-      if (B.opp === 'wind') { gx = ox + 18; gy = oy + 14; }
-      if (B.opp === 'punch') { gx = ox - 70; gy = oy + 34; }
-      if (B.opp === 'open' || B.opp === 'recoil') { gx = ox - 2; gy = oy + 56; }
-      drawGlove(ox + 32, gy + 2, '#3a2a1a');
-      drawGlove(gx, gy, '#3a2a1a');
+      // the same poses as Magnio's, mirrored
+      var og = { back: [12, 12], front: [16, 10] };
+      if (B.opp === 'wind') og = { back: [12, 12], front: [7, 6] };
+      else if (B.opp === 'punch') og = { back: [12, 12], front: [25, 11] };
+      else if (B.opp === 'open' || B.opp === 'recoil') og = { back: [8, 19], front: [12, 19] };
+      boxArm(ox, oy, 5, 13, og.back[0], og.back[1], '#8a6a3a', '#2a1a10', -1);
+      ctx.drawImage(A.boxer.skurk.l, ox, oy, 48, 84);
+      boxArm(ox, oy, 11, 13, og.front[0], og.front[1], '#b08850', '#3a2a1a', -1);
       if (B.opp === 'wind') F.shadow(ctx, '!', ox + 20, oy - 26, '#ff5050', 3);
       if (B.opp === 'open' || B.opp === 'recoil') {
         for (i = 0; i < 3; i++) {
@@ -1544,10 +1569,27 @@
     }
   }
 
-  function drawGlove(x, y, col) {
-    ctx.fillStyle = '#141414'; ctx.fillRect(x - 1, y - 1, 14, 14);
-    ctx.fillStyle = col; ctx.fillRect(x, y, 12, 12);
-    ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(x + 2, y + 2, 4, 3);
+  var BOX_REACH = 34; // how far in front of Magnio a punch reaches
+
+  // An arm from the shoulder to the glove, at three times size, in whole
+  // art pixels relative to the boxer's sprite (ax, ay), mirrored for the
+  // one facing left (dir -1).
+  function boxArm(x, y, sx, sy, gx, gy, sleeve, glove, dir) {
+    function at(ax) { return dir > 0 ? x + ax * 3 : x + (15 - ax) * 3; }
+    var n = Math.max(Math.abs(gx - sx), Math.abs(gy - sy)), k;
+    for (k = 0; k <= n; k++) {
+      var ax = Math.round(sx + (gx - sx) * k / n), ay = Math.round(sy + (gy - sy) * k / n);
+      ctx.fillStyle = '#141414'; ctx.fillRect(at(ax) - 1, y + ay * 3 - 1, 8, 8);
+    }
+    for (k = 0; k <= n; k++) {
+      var bx = Math.round(sx + (gx - sx) * k / n), by = Math.round(sy + (gy - sy) * k / n);
+      ctx.fillStyle = sleeve; ctx.fillRect(at(bx), y + by * 3, 6, 6);
+    }
+    var cx = at(gx) + 3, cy = y + gy * 3 + 3;
+    ctx.fillStyle = '#141414'; ctx.fillRect(cx - 8, cy - 8, 16, 16);
+    ctx.fillStyle = glove; ctx.fillRect(cx - 7, cy - 7, 14, 14);
+    ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(cx - 5, cy - 5, 5, 3);
+    ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(cx - 7, cy + 4, 14, 3);
   }
 
   // The knockout: he topples, the hat and the fake moustache fly off, and
@@ -2617,6 +2659,9 @@
     }
     if (id === 'trondheim') {
       SHORTCUTS.push(['borsen', 'Børsen i Trondheim', function () { atMinigame('trondheim', 'bors'); }]);
+    }
+    if (id === 'lillesand') {
+      SHORTCUTS.push(['quiz', 'Quizen på kafeen i Lillesand', function () { atMinigame('lillesand', 'quiz'); }]);
     }
     if (id === 'heim') {
       SHORTCUTS.push(['catan', 'Catan på Heim', function () { atMinigame('heim', 'catan'); }]);

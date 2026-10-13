@@ -1506,8 +1506,8 @@
     '....WSSSSSSW....', '....SKKSKKSS....', '....SSSSSSSSS...', '....SSSSSSPP....',
     '.....SSSSSS.....', '......SSSS......', '................'
   ];
-  PEOPLE.skurk.pal.D = '#5e5248';
-  PEOPLE.skurk.pal.H = '#5e5248';
+  PEOPLE.skurk.pal.D = '#8a6a4a';
+  PEOPLE.skurk.pal.H = '#a08a74';
   PEOPLE.tove = { head: 'tove', body: 'plain', pal: { Y: '#f0d070', C: '#c8304a', L: '#2a3448', N: '#3a2a1a' } };
   PEOPLE.aslak = { head: 'aslak', body: 'plain', pal: { H: '#6a4a2a', D: '#5a3a20', C: '#3a6a4a', L: '#2a3448', N: '#2a1a10' } };
   PEOPLE.kathinka = { head: 'kathinka', body: 'plain', pal: { Y: '#f0d070', C: '#e0a040', L: '#2a3448', N: '#3a2a1a' } };
@@ -2035,13 +2035,28 @@
 
   // ================================================================ the finale
   // Gorm without his disguise.
+  // Gorm: very short light hair, a moustache and a beard of brown and
+  // ginger with grey in it, greyest on the chin.
   HEADS.gorm = [
     '................', '................', '.....HHHHHH.....', '....HHHHHHHH....',
-    '....HHSSSSSH....', '....HSSSSKSS....', '....SSSSSSSSS...', '....DSSSSSPP....',
-    '....DDDDDDDD....', '.....DDDDDD.....', '......DDDD......'
+    '....HSSSSSSS....', '....SSSSSSSS....', '....SSSKSSSSS...', '....DSSSSSPP....',
+    '....DDDMMMMM....', '....DEDDEDED....', '.....EEDEEE.....'
   ];
-  PEOPLE.gorm = { head: 'gorm', body: 'coat', pal: { H: '#5e5248', D: '#5e5248', C: '#b08850', c: '#7a5a30', L: '#2a2a2a', N: '#141414' } };
+  PEOPLE.gorm = { head: 'gorm', body: 'coat', pal: { H: '#a08a74', D: '#8a6a4a', M: '#6a4a30', E: '#b8b0a8',
+    C: '#b08850', c: '#7a5a30', L: '#2a2a2a', N: '#141414' } };
   npc.gorm = pair(HEADS.gorm.concat(BODIES.coat), merge({ S: '#f8c088', P: '#e8946a', K: '#141414' }, PEOPLE.gorm.pal), 'npc gorm');
+
+  // ================================================================ the boxing match
+  // Boxers without the arms hanging at their sides: the ring scene draws the
+  // arms and gloves itself, up in a guard or out in a punch, so they stay
+  // attached to the shoulders.
+  var BOX_TORSO = BIG_TORSO.slice(0, 5).concat(['......RRRRRR....', '......RRRRRR....', '......RRRRRR....'], BIG_TORSO.slice(8));
+  var boxer = { magnio: {} };
+  ['stand', 'walk1', 'walk2'].forEach(function (f) {
+    boxer.magnio[f] = pair(BIG_HEAD.concat(BOX_TORSO, BIG_LEGS[f]), merge(BASE, CHARS.magnio.fire), 'boxer magnio ' + f);
+  });
+  var BOX_COAT = BODIES.coat.slice(0, 5).concat(['......CcCC......', '......CcCC......', '......CcCC......'], BODIES.coat.slice(8));
+  boxer.skurk = pair(HEADS.fedora.concat(BOX_COAT), merge({ S: '#f8c088', P: '#e8946a', K: '#141414', H: '#5a3a1a' }, PEOPLE.skurk.pal), 'boxer skurk');
 
   // ================================================================ the drive on Harøya
   // A red estate car, the kind every family on the island had. From the side
@@ -2131,6 +2146,22 @@
   var gut = gutTable();
   npc.sloyebord = { r: gut, l: gut };
 
+  // The café in Lillesand, where the quiz is: a white house with a striped
+  // awning and a sign, and the host outside in a white shirt.
+  function cafe() {
+    var c = house(64, 48, 20, { door: '#5a3a1a', chimney: 44 }), g = c.getContext('2d');
+    for (var x = 4; x < 60; x += 4) rect(g, x, 34, 4, 6, (x / 4) % 2 ? '#f4f4f4' : '#d83030');
+    for (x = 4; x < 60; x += 4) rect(g, x, 40, 3, 1, (x / 4) % 2 ? '#f4f4f4' : '#d83030');
+    rect(g, 16, 23, 32, 9, '#2a3450');
+    SM.font.draw(g, 'KAFE', 21, 24, '#f0d040');
+    rect(g, 6, 44, 18, 14, '#f4f4f4'); rect(g, 7, 45, 16, 12, '#3a6a9a');
+    rect(g, 11, 51, 5, 4, '#f4f4f4'); rect(g, 16, 52, 2, 2, '#f4f4f4');        // a coffee cup in the window
+    return c;
+  }
+  decor.kafe = cafe();
+  npc.kafevert = pair(HEADS.hair.concat(BODIES.plain),
+    { S: '#f8c088', P: '#e8946a', K: '#141414', H: '#c89a50', C: '#f4f4f4', L: '#2a2a3a', N: '#141414' }, 'npc kafevert');
+
   // ================================================================ Trondheim Børs
   // The stockbroker outside the exchange: slicked hair, a navy suit and a red tie.
   var SUIT_TOP = [
@@ -2166,37 +2197,80 @@
   }
   decor.bors = exchange();
 
-  // The statue: Magne riding a whale, with a mullet, raising a boxing glove.
+  // The statue: Magnio riding a whale, raising a boxing glove. He is the
+  // player figure himself, only with his hair grown long down his back, and
+  // the whale has a proper tail with flukes. Both are drawn in colour first
+  // and then turned into green bronze by how light each pixel is.
+  var STATUE_HEAD = BIG_HEAD.slice(0, 3).concat([
+    '.HHHHHHSSSKS....', '.HHHHSSSSSKSS...', '.HHHSSSSSSSPPS..', '.HHHSSSSSSPPPP..', '.HHHSSSWWWWWWW..',
+    '.HHHSSWWWWWWWWW.', '.HHHSSSwwSSwww..', '.HHH.SSSSSSSS...', '.HHH..SSSSSS....'
+  ]);
+  var STATUE_TORSO = ['.HHH.RRRRRRR.SS.', '.HHHRRRRRRRRRSS.', '.HHRRRRRRRRRRRR.', '.HRBbBbBbBbBbBR.'].concat(BIG_TORSO_JUMP.slice(4));
+  var RIDING_LEGS = [
+    '.....OOOOOOOO...', '....OOOOOOOOOO..', '.....OOOOOOOOO..', '.........OOOO...', '.........OOOO...',
+    '.........OOOO...', '..........OOOO..', '..........NNNNN.', '..........NNNNNN', '................'
+  ];
+  var PATINA = ['#24403a', '#3a5e52', '#5e8a7a', '#7ab0a0', '#a8d4c4'];
+
+  function bronze(c) {
+    var g = c.getContext('2d'), img = g.getImageData(0, 0, c.width, c.height), d = img.data;
+    var shades = PATINA.map(function (h) { var n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; });
+    for (var i = 0; i < d.length; i += 4) {
+      if (!d[i + 3]) continue;
+      var lum = 0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2];
+      var k = lum < 50 ? 0 : lum < 95 ? 1 : lum < 150 ? 2 : lum < 222 ? 3 : 4;
+      d[i] = shades[k][0]; d[i + 1] = shades[k][1]; d[i + 2] = shades[k][2]; d[i + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+  }
+
   function statue() {
     var w = 96, h = 104, c = mk(w, h), g = c.getContext('2d');
-    var mid = '#4a7a6a', hi = '#7ab0a0', lo = '#2a4a40';
-    // pedestal with a gold plaque
+    var art = mk(w, 78), a = art.getContext('2d'), t;
+    // the whale, facing left: a blunt head, a back that rises towards the
+    // tail, and the flukes up behind
+    function spine(t) { return [14 + 66 * t, 61 - 6 * t - 18 * t * t * t, 14 * (1 - 0.85 * Math.pow(t, 1.3)) + 1]; }
+    for (t = 0; t <= 1; t += 0.01) { var p = spine(t); disc(a, Math.round(p[0]), Math.round(p[1]), Math.round(p[2]) + 1, Math.round(p[2]) + 1, '#202020'); }
+    for (t = 0; t <= 1; t += 0.01) { p = spine(t); disc(a, Math.round(p[0]), Math.round(p[1]), Math.round(p[2]), Math.round(p[2]), '#707070'); }
+    for (t = 0; t <= 0.8; t += 0.01) {   // the pale belly with its grooves
+      p = spine(t);
+      var r = Math.round(p[2]);
+      disc(a, Math.round(p[0]), Math.round(p[1] + r * 0.45), Math.max(1, r - 3), Math.max(1, Math.round(r * 0.45)), '#c0c0c0');
+    }
+    for (var gx = 6; gx < 50; gx += 4) rect(a, gx, Math.round(spine((gx - 14) / 66)[1] + spine(Math.max(0, (gx - 14) / 66))[2] * 0.5), 3, 1, '#8a8a8a');
+    for (t = 0.05; t <= 0.7; t += 0.01) { p = spine(t); rect(a, Math.round(p[0]), Math.round(p[1] - p[2] + 2), 1, 2, '#a0a0a0'); } // light along the back
+    for (var fx = -13; fx <= 13; fx++) {                                                         // the flukes, a crescent
+      var fy = 34 - Math.round(fx * fx / 14), th = Math.max(1, 4 - Math.floor(Math.abs(fx) / 4));
+      if (Math.abs(fx) < 1) fy += 1;                                                             // the notch in the middle
+      rect(a, 81 + fx, fy - 1, 1, th + 2, '#202020');
+    }
+    for (fx = -12; fx <= 12; fx++) {
+      fy = 34 - Math.round(fx * fx / 14); th = Math.max(1, 4 - Math.floor(Math.abs(fx) / 4));
+      if (Math.abs(fx) < 1) fy += 1;
+      rect(a, 81 + fx, fy, 1, th, '#707070');
+      if (th > 2) rect(a, 81 + fx, fy, 1, 1, '#a0a0a0');
+    }
+    rect(a, 4, 64, 16, 1, '#202020'); rect(a, 2, 63, 3, 1, '#202020');                          // mouth
+    disc(a, 14, 57, 1, 1, '#101010');                                                           // eye
+    disc(a, 30, 70, 6, 2, '#505050');                                                           // flipper
+    // Magnio on its back, one leg down its side, the glove raised high
+    var rider = fromRows(['................', '................', '................', '................', '................', '................']
+      .concat(STATUE_HEAD, STATUE_TORSO, RIDING_LEGS), merge(merge(BASE, CHARS.magnio.normal), { H: '#8a8478' }), 'statue rider');
+    var rg = rider.getContext('2d');
+    rect(rg, 13, 6, 2, 13, '#c8281c');                                                         // the raised arm
+    rect(rg, 12, 1, 4, 5, '#a01818'); rect(rg, 12, 1, 3, 4, '#e83030');                       // and the glove
+    a.drawImage(rider, 30, 18);
+    bronze(art);
+    g.drawImage(art, 0, 0);
+    // the pedestal, with a gold plaque
     rect(g, 12, 76, 72, 6, '#c8c2b4');
     rect(g, 16, 82, 64, 22, '#a8a294');
     rect(g, 16, 82, 64, 2, '#c8c2b4');
     rect(g, 34, 88, 28, 10, '#a87810');
     rect(g, 35, 89, 26, 8, '#e0b840');
-    // the whale, facing left, tail up behind
-    disc(g, 46, 62, 36, 15, lo);
-    disc(g, 46, 61, 34, 13, mid);
-    disc(g, 40, 56, 22, 5, hi);
-    for (var i = 0; i < 14; i++) disc(g, 74 + i, Math.round(58 - i * 1.4), 5 - Math.floor(i / 5), 4 - Math.floor(i / 5), mid);
-    disc(g, 81, 37, 7, 3, mid); disc(g, 91, 37, 4, 3, mid);
-    rect(g, 14, 66, 22, 1, lo);
-    disc(g, 22, 58, 2, 2, lo);
-    // the rider
-    rect(g, 44, 44, 5, 14, mid); rect(g, 44, 44, 2, 14, hi);
-    rect(g, 42, 28, 14, 18, mid); rect(g, 42, 28, 3, 18, hi);
-    disc(g, 49, 22, 6, 6, mid);
-    disc(g, 47, 20, 3, 3, hi);
-    rect(g, 43, 15, 13, 4, lo);
-    rect(g, 53, 18, 5, 14, lo);
-    rect(g, 43, 25, 7, 2, hi);
-    rect(g, 38, 12, 4, 18, mid);
-    disc(g, 39, 9, 5, 5, mid);
-    disc(g, 38, 8, 2, 2, hi);
     return c;
   }
+
 
   // A yellow helicopter. The rotor is drawn by the game so it can spin.
   function helicopter() {
@@ -2216,6 +2290,7 @@
 
   SM.art = {
     statue: statue(),
+    boxer: boxer,
     car: car,
     angel: angel(),
     helicopter: helicopter(),

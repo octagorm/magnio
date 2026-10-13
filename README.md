@@ -42,11 +42,18 @@ spor i saken. (Det er Gorm i forkledning. Han trengte verktøyet til en statue.)
    (trykk opp eller △). Moraira og Praha er valgfrie sideturer der
    leietakerne betaler husleie. Lillesand fører historien videre.
 6. **Lillesand**: fra brygga, gjennom sentrum og opp til huset på Blåbæråsen.
-   Aslak, Kathinka, Fride, Tellef og Asta er med underveis. Barna sier
+   Aslak, Kathinka, Fride, Tellef og Asta er med underveis.
+   På kafeen i sentrum er det quiz: «Vil du bli Magnionær?» Ti stadig
+   vriere spørsmål for opptil en million kroner, med 50:50, ring en venn
+   (som alltid er sikker i sin sak) og spør publikum. Man kan gå hjem med
+   pengene når man vil, og 1 000 og 10 000 kr er sikre. Svarer man feil,
+   blir man kastet ut, men kan gå inn igjen ved å snakke med kafeverten. Barna sier
    «Beste» og «Farmor».
 7. **Finalen** på Blåbæråsen: mannen i frakk venter ved flaggstanga. Det blir
-   boksekamp (dukk med venstre eller ned når han varsler slaget, slå med ✕
-   eller □ når han er åpen; man taper aldri). Når han går i gulvet, ryker
+   boksekamp. Begge danser på tærne, og Magnio går fritt fram og tilbake med
+   venstre og høyre. Når mannen i frakk varsler slaget, dukker man med ned
+   eller går bakover ut av rekkevidde. Når han er åpen, går man nær nok og slår
+   med ✕ eller □. Man taper aldri. Når han går i gulvet, ryker
    forkledningen, og det er Gorm. Et helikopter senker en rytterstatue av
    Magne på hval, med hockeysveis, flagget heises, og hele familien feirer:
    «Gratla med dagen, Magnio!» Til slutt kommer rulleteksten.
@@ -156,7 +163,8 @@ Tallene står øverst i `src/game.js`.
 - `src/input.js` håndterer tastatur og kontroller.
 - `src/game.js` har fysikken, fiendene, historien, kartet og tegningen.
 - `src/kjoretur.js` har kjøreturen på Harøya, `src/borsen.js` Trondheim Børs,
-  `src/catan.js` Catan på Heim og `src/sloying.js` sløyingen av fisken.
+  `src/catan.js` Catan på Heim, `src/sloying.js` sløyingen av fisken og
+  `src/quiz.js` quizen på kafeen i Lillesand.
 - `src/kake.js` har kakescenen etter rulleteksten, og `src/fest.js` dansen
   etter den.
 - `IDEER.md` samler idéer til flere minispill.

@@ -7,10 +7,7 @@ spor enn bare «gå til høyre».
 
 ## Minispill
 
-### Quiz
-
-En quiz. Ikke bestemt ennå hva den handler om, hvem som spør eller hvor den
-skal være.
+Ingen nye ennå. Alt som har stått her, er laget.
 
 ## Steder å sette dem
 
