@@ -1650,17 +1650,93 @@
 
   // Bryggene: the old wharf houses on stilts, with Nidarosdomen behind them.
   var WHARF = ['#d8a040', '#a8382a', '#f0ece0', '#5a8a5a', '#c86a3a', '#e8d090', '#4a6a9a'];
-  function wharfRow(w) {
-    var h = 110, c = mk(w, h), g = c.getContext('2d');
-    for (var dx = 160; dx < w; dx += 900) {
-      for (var ry = 0; ry < 10; ry++) rect(g, dx + 20 + ry, 26 + ry, 100 - ry * 2, 1, '#4a5a58');
-      rect(g, dx + 20, 36, 100, 40, '#7a7a80');
-      rect(g, dx + 20, 22, 14, 54, '#6a6a70'); rect(g, dx + 106, 22, 14, 54, '#6a6a70');
-      rect(g, dx + 60, 16, 16, 30, '#6a6a70');
-      for (var s = 0; s < 16; s++) rect(g, dx + 68 - Math.round(s * 7 / 16), s, Math.round(s * 14 / 16) + 1, 1, '#4a5a58');
-      disc(g, dx + 68, 48, 5, 5, '#3a3a40');
-      for (var wx = dx + 38; wx < dx + 104; wx += 10) rect(g, wx, 56, 4, 12, '#3a3a40');
+
+  // Nidarosdomen, as one sees it from the north-west: the west front with
+  // its two towers, rose window and rows of statues, and behind it the long
+  // nave under green copper, the tall slender spire over the crossing, and
+  // the octagon at the east end. Grey-green soapstone. Only the top shows
+  // over the wharf houses.
+  function nidaros(g, dx) {
+    var stone = '#868a80', lit = '#9a9e92', dark = '#5e6258', deep = '#3a3e3a';
+    var cu = '#5e9a82', cuDark = '#447a66', cuLit = '#86bca4', gold = '#e8c040';
+    // a pointed roof or spire, lit from the left
+    function spire(cx, tip, base, half) {
+      for (var y = tip; y < base; y++) {
+        var hw = Math.round((y - tip + 1) / (base - tip) * half);
+        rect(g, cx - hw, y, hw + 1, 1, cu);
+        rect(g, cx + 1, y, hw, 1, cuDark);
+      }
     }
+    // tall pointed windows
+    function lancets(x0, x1, y, hgt, step) {
+      for (var x = x0; x < x1; x += step) {
+        rect(g, x, y + 1, 3, hgt - 1, deep);
+        rect(g, x + 1, y, 1, 1, deep);
+      }
+    }
+
+    // the octagon at the east end, lower, with a pointed roof and small spires
+    var ox = dx + 150;
+    rect(g, ox, 60, 24, 74, stone);
+    for (var r = 0; r < 8; r++) rect(g, ox + 8 - r, 52 + r, 8 + r * 2, 1, r % 3 === 2 ? cuDark : cu);
+    spire(ox + 12, 40, 53, 4);
+    spire(ox + 2, 50, 60, 2); spire(ox + 22, 50, 60, 2);
+    lancets(ox + 4, ox + 22, 64, 12, 6);
+    // the choir
+    rect(g, dx + 124, 60, 26, 74, stone);
+    for (r = 0; r < 10; r++) rect(g, dx + 124, 50 + r, 26, 1, r < 1 ? cuLit : cu);
+    lancets(dx + 127, dx + 148, 64, 12, 7);
+    // the nave: steep copper roof, buttresses between the windows
+    rect(g, dx + 40, 58, 72, 76, stone);
+    for (r = 0; r < 12; r++) rect(g, dx + 40, 46 + r, 72, 1, r < 1 ? cuLit : r % 4 === 3 ? cuDark : cu);
+    for (var bx = dx + 44; bx < dx + 110; bx += 9) {
+      rect(g, bx, 56, 2, 78, lit);
+      rect(g, bx, 53, 2, 3, cuDark);
+    }
+    lancets(dx + 48, dx + 108, 63, 14, 9);
+    // the crossing tower and its tall spire, with a gilded tip
+    var tx = dx + 118;
+    rect(g, tx - 7, 30, 14, 104, stone);
+    rect(g, tx - 7, 30, 3, 104, lit);
+    rect(g, tx + 4, 30, 3, 104, dark);
+    rect(g, tx - 8, 29, 16, 2, dark);
+    for (var lx = tx - 4; lx < tx + 4; lx += 4) { rect(g, lx, 36, 2, 9, deep); rect(g, lx, 50, 2, 6, deep); }
+    spire(tx, 3, 30, 7);
+    rect(g, tx, 0, 1, 3, gold);
+    spire(tx - 7, 22, 30, 1); spire(tx + 7, 22, 30, 1);
+    // the west front: a wide screen of stone between two towers, a gable in
+    // the middle, a rose window, and rows of statues in niches below
+    var wx = dx;
+    rect(g, wx + 6, 42, 36, 92, lit);
+    for (r = 0; r < 10; r++) rect(g, wx + 24 - r, 32 + r, r * 2 + 1, 1, lit);      // the gable
+    rect(g, wx + 24, 30, 1, 3, stone);                                             // a cross on top
+    rect(g, wx + 23, 31, 3, 1, stone);
+    disc(g, wx + 24, 52, 7, 7, dark);                                              // the rose window
+    disc(g, wx + 24, 52, 6, 6, '#2e4a6a');
+    disc(g, wx + 24, 52, 2, 2, '#c8a848');
+    for (var k = 0; k < 8; k++) {
+      var a = k * Math.PI / 4;
+      rect(g, Math.round(wx + 24 + Math.cos(a) * 4), Math.round(52 + Math.sin(a) * 4), 1, 1, '#c8a848');
+    }
+    for (var row = 0; row < 4; row++) {                                            // statues in niches
+      var sy = 63 + row * 9;
+      rect(g, wx + 6, sy - 1, 36, 1, dark);
+      for (var nx = wx + 8; nx < wx + 41; nx += 3) { rect(g, nx, sy + 1, 2, 6, deep); rect(g, nx, sy + 2, 2, 3, stone); }
+    }
+    for (var t = 0; t < 2; t++) {                                                  // the two towers
+      var tw = wx + (t ? 38 : 0);
+      rect(g, tw, 36, 10, 98, stone);
+      rect(g, tw, 36, 3, 98, lit);
+      rect(g, tw + 7, 36, 3, 98, dark);
+      rect(g, tw - 1, 35, 12, 2, dark);
+      rect(g, tw + 4, 40, 2, 8, deep);
+      spire(tw + 5, 18, 36, 5);
+    }
+  }
+
+  function wharfRow(w) {
+    var h = 134, c = mk(w, h), g = c.getContext('2d');
+    for (var dx = 160; dx < w; dx += 900) nidaros(g, dx);
     var x = 0, i = 0;
     while (x < w) {
       var hw = 28 + ((i * 7) % 3) * 6, hh = 44 + ((i * 5) % 3) * 8, col = WHARF[i % WHARF.length];
@@ -1714,7 +1790,7 @@
     var stone = '#8e8c86', line = '#6a6864';
     rect(g, 0, 38, w, 54, stone);
     for (var y = 42; y < h; y += 6) rect(g, 0, y, w, 1, line);
-    for (var s = 0; s < 14; s++) rect(g, Math.round(s * 1.5), 24 + s, w - Math.round(s * 3), 1, '#3a4a48');
+    for (var s = 0; s < 14; s++) rect(g, Math.round((13 - s) * 1.5), 24 + s, w - Math.round((13 - s) * 3), 1, '#3a4a48'); // hipped, wider at the eaves
     rect(g, 48, 8, 24, 84, '#9a9892');
     for (s = 0; s < 18; s++) rect(g, 60 - Math.round(s * 12 / 18), -10 + s, Math.round(s * 24 / 18) + 1, 1, '#3a4a48');
     for (var x = 6; x < w - 10; x += 14) {
@@ -2054,7 +2130,7 @@
       // main tower with a green copper top.
       var stone = '#7a7874', dark = '#4a4846', copper = '#5a8a7a';
       rect(g, dx + 118, 30, 46, 22, stone);
-      for (var r = 0; r < 10; r++) rect(g, dx + 120 + r, 20 + r, 42 - r * 2, 1, dark);
+      for (var r = 0; r < 10; r++) rect(g, dx + 129 - r, 20 + r, 24 + r * 2, 1, dark);
       for (var wx2 = dx + 126; wx2 < dx + 158; wx2 += 7) rect(g, wx2, 34, 2, 10, dark);
       var spires = [dx + 116, dx + 132];
       for (var k = 0; k < spires.length; k++) {

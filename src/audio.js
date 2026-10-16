@@ -131,11 +131,12 @@
   }
 
   // ---------------------------------------------------------------- music
-  // Eight original tunes. Each bar is a chord plus eight eighth-note tokens
+  // Nine original tunes. Each bar is a chord plus eight eighth-note tokens
   // for the melody: a note, '-' to hold the one before, or '.' for a rest.
   // The melody is played with soft triangle and sine tones over a quiet bass
   // and chord pad, and everything goes through a low-pass filter so nothing
-  // sounds sharp.
+  // sounds sharp. swing pushes every second eighth a little late, by that
+  // fraction of a step, which makes a tune shuffle.
   var CHORD = {
     G: { bass: ['G2', 'D3'], pad: ['G3', 'B3', 'D4'] },
     C: { bass: ['C3', 'G2'], pad: ['G3', 'C4', 'E4'] },
@@ -149,8 +150,10 @@
     B: { bass: ['B2', 'F#2'], pad: ['B3', 'D#4', 'F#4'] }
   };
   var SONGS = {
-    // Calm and folksy, for the map and most levels. Two halves, about a minute.
-    main: { bpm: 104, lead: 'warm', bass: 'half', perc: false, bars: [
+    // Folksy but with a bit of groove, for the map and most levels: a
+    // syncopated bass, light drums, chord stabs and a slight swing. Two
+    // halves, a little under a minute.
+    main: { bpm: 122, lead: 'warm', bass: 'groove', perc: 'light', stabs: true, swing: 0.16, bars: [
       ['G', 'D5 - B4 - G4 - B4 D5'], ['C', 'E5 - - D5 C5 - E5 -'], ['G', 'D5 - B4 G4 A4 B4 D5 -'], ['D', 'A4 - - - F#4 - A4 -'],
       ['G', 'D5 - B4 - G4 - B4 D5'], ['C', 'G5 - E5 - C5 - E5 G5'], ['D', 'F#5 - E5 D5 C5 - A4 -'], ['G', 'G4 - - - - - . .'],
       ['Em', 'B4 - E5 - G5 - E5 -'], ['C', 'C5 - E5 - G5 - E5 -'], ['G', 'D5 - G5 - B4 - D5 -'], ['D', 'A4 - F#4 - D5 - . .'],
@@ -185,6 +188,11 @@
     praha: { bpm: 132, lead: 'punchy', bass: 'drive', perc: true, bars: [
       ['C', 'E5 G5 E5 C5 G4 - C5 -'], ['G', 'D5 F5 D5 B4 G4 - B4 -'], ['G', 'D5 - E5 F5 G5 - F5 -'], ['C', 'E5 - D5 - C5 - . .'],
       ['F', 'A5 - G5 F5 E5 - F5 -'], ['C', 'G5 - E5 C5 E5 - G5 -'], ['G', 'F5 - E5 - D5 - B4 -'], ['C', 'C5 - G4 - C5 - . .']
+    ] },
+    // Easy-going and swinging, like a lounge, while bets are placed at Trondheim Børs.
+    bors: { bpm: 112, lead: 'warm', bass: 'groove', perc: 'light', stabs: true, swing: 0.2, bars: [
+      ['C', 'E5 - G5 E5 . C5 D5 E5'], ['Am', 'C5 - A4 - . E5 D5 C5'], ['Dm', 'D5 - F5 - A5 - F5 D5'], ['G', 'B4 - D5 - G5 - . .'],
+      ['C', 'E5 - G5 E5 . C5 D5 E5'], ['Am', 'A5 - G5 E5 . C5 E5 A5'], ['Dm', 'F5 - E5 D5 G5 - B4 -'], ['C', 'C5 - - - - - . .']
     ] },
     // Funky, for the dance at the very end: a bouncing octave bass and hi-hats.
     funk: { bpm: 112, lead: 'punchy', bass: 'funk', perc: 'funk', bars: [
@@ -243,31 +251,42 @@
     if (song.bass === 'funk') {
       var root = nf(ch.bass[0]), FUNK = [1, 0, 2, 1, 0, 1, 2, 1.5]; // root, rest, octave, ... fifth
       if (FUNK[pos]) note('triangle', root * FUNK[pos], t, sd * 0.6, 0.36, 0.005, 0.04);
+    } else if (song.bass === 'groove') {
+      var gr = nf(ch.bass[0]), GROOVE = [1, 0, 1, 2, 0, 1.5, 0, 2]; // root, rest, root, octave, rest, fifth, rest, octave
+      if (GROOVE[pos]) note('triangle', gr * GROOVE[pos], t, sd * (pos === 0 ? 1.4 : 0.55), 0.34, 0.005, 0.04);
     } else if (song.bass === 'half') {
       if (pos === 0) note('triangle', nf(ch.bass[0]), t, sd * 3.8, 0.34, 0.02, 0.15);
       if (pos === 4) note('triangle', nf(ch.bass[1]), t, sd * 3.8, 0.28, 0.02, 0.15);
     } else {
       note('triangle', nf(ch.bass[pos % 4 === 2 ? 1 : 0]), t, sd * 0.8, 0.3, 0.01, 0.05);
     }
-    if (pos === 0) for (var k = 0; k < ch.pad.length; k++) note('sine', nf(ch.pad[k]), t, sd * 7.8, 0.045, 0.25, 0.6);
+    if (pos === 0) for (var k = 0; k < ch.pad.length; k++) note('sine', nf(ch.pad[k]), t, sd * 7.8, song.stabs ? 0.025 : 0.045, 0.25, 0.6);
+    // Short chord stabs just off the beat, as a funk guitar would play them.
+    if (song.stabs && (pos === 3 || pos === 6)) for (var j = 0; j < ch.pad.length; j++) note(pulse50, nf(ch.pad[j]) * 2, t, sd * 0.45, 0.022, 0.005, 0.04);
     if (song.perc === 'funk') {
       noise(t, 0.04, 0.035, 7000, musicBus, 'highpass');
       if (pos === 0 || pos === 5) note('sine', 80, t, 0.14, 0.4, 0.005, 0.12);
       if (pos === 2 || pos === 6) noise(t, 0.12, 0.12, 1800, musicBus, 'bandpass');
+    } else if (song.perc === 'light') {
+      if (pos % 2) noise(t, 0.03, 0.025, 8000, musicBus, 'highpass');
+      if (pos === 0 || pos === 3) note('sine', 85, t, 0.12, 0.32, 0.005, 0.1);
+      if (pos === 2 || pos === 6) noise(t, 0.09, 0.07, 1900, musicBus, 'bandpass');
     } else if (song.perc) {
       if (pos === 0 || pos === 4) note('sine', 90, t, 0.12, 0.35, 0.005, 0.1);
       if (pos === 2 || pos === 6) noise(t, 0.08, 0.06, 1800, musicBus, 'bandpass');
     }
   }
 
-  // Called every frame. isFast speeds the tune up a little while the cognac lasts.
+  // Called every frame. isFast speeds the tune up while the cognac lasts, and
+  // opens the filter a little so it sounds brighter too.
   function update(isFast) {
+    if (ctx && isFast !== fast) musicFilter.frequency.setTargetAtTime(isFast ? 3600 : 2600, ctx.currentTime, 0.1);
     fast = isFast;
     if (!ctx || !playing || paused || !musicOn || ctx.state !== 'running') return;
-    var sd = 60 / song.bpm / 2 / (fast ? 1.2 : 1);
+    var sd = 60 / song.bpm / 2 / (fast ? 1.35 : 1);
     if (nextT < ctx.currentTime) nextT = ctx.currentTime + 0.05;
     while (nextT < ctx.currentTime + 0.15) {
-      schedule(step, nextT, sd);
+      schedule(step, nextT + (step % 2 && song.swing ? song.swing * sd : 0), sd);
       nextT += sd;
       step = (step + 1) % song.mel.length;
     }
@@ -277,7 +296,7 @@
     resume: resume,
     sfx: sfx,
     update: update,
-    // name picks the tune: 'main', 'hval', 'boks', 'bil', 'quiz', 'indisk', 'praha' or 'funk'.
+    // name picks the tune: 'main', 'hval', 'boks', 'bil', 'quiz', 'indisk', 'praha', 'bors' or 'funk'.
     // A tune that is already playing just carries on.
     startMusic: function (name) {
       var next = name && SONGS[name] ? SONGS[name] : song;

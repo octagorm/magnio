@@ -5,7 +5,8 @@
 // business all around. Walking past the sights, the two of them talk about
 // them, and there are shops on the way: socks for the sons, blue Bohemian
 // glass, a marionette and a garnet brooch are on Tove's list. □ takes the
-// tram home.
+// tram home. With two players, Frodigi comes along and walks wherever he
+// likes too, with the second controller, as long as he stays on screen.
 //
 // The map is drawn once, when the game starts it: first as a grid of zones
 // (house, street, square, river, park...), which also says where one can
@@ -846,6 +847,7 @@
       while (!walkable(S.x, S.y) && S.y > 0) S.y--;
       S.trail = [];
       for (var i = 0; i < 20; i++) S.trail.push([S.x + 6, S.y]);
+      placeFro();
       say([['tove', 'NÅ SKA ME GÅ PÅ KRYSS OG TVERS! HUSK SOKKER TE GUTTENE.'], ['me', 'OG NOE BLÅTT GLASS.']]);
     }
     if (S.t > 70) {
@@ -885,41 +887,71 @@
     return null;
   }
 
+  // w is whoever walks: S itself for Magnio, or Frodigi.
   // Walking is forgiving, since the lanes are narrow and most streets run at
   // an angle: if the way straight ahead is blocked, he tries a little to
   // either side (first the side that worked last time, so he does not
   // dither), and so slides along walls and follows a street round a bend.
   // Failing that, he looks a few pixels sideways for an opening in the
   // direction pressed, and slips across to it, round the corner.
-  function tryMove(vx, vy) {
+  function tryMove(w, vx, vy) {
     var sp = Math.hypot(vx, vy), a = Math.atan2(vy, vx), k, side, d;
-    if (walkable(S.x + vx, S.y + vy)) { S.x += vx; S.y += vy; return true; }
+    if (walkable(w.x + vx, w.y + vy)) { w.x += vx; w.y += vy; return true; }
     for (k = 1; k <= 2; k++) {
       for (side = 0; side < 2; side++) {
-        var sgn = side ? -S.lean : S.lean, b = a + sgn * k * Math.PI / 6;
+        var sgn = side ? -w.lean : w.lean, b = a + sgn * k * Math.PI / 6;
         var nx = Math.cos(b) * sp, ny = Math.sin(b) * sp;
-        if (walkable(S.x + nx, S.y + ny)) { S.x += nx; S.y += ny; S.lean = sgn; return true; }
+        if (walkable(w.x + nx, w.y + ny)) { w.x += nx; w.y += ny; w.lean = sgn; return true; }
       }
     }
     var px = -Math.sin(a), py = Math.cos(a), fx = Math.cos(a), fy = Math.sin(a);
     for (d = 1; d <= 10; d++) {
       for (side = 0; side < 2; side++) {
-        var sg = side ? -S.lean : S.lean, ex = S.x + px * d * sg, ey = S.y + py * d * sg, clear = true;
-        for (k = 1; k <= d && clear; k++) clear = walkable(S.x + px * k * sg, S.y + py * k * sg);
-        if (clear && walkable(ex + fx * 2, ey + fy * 2)) { S.x += px * sp * sg; S.y += py * sp * sg; S.lean = sg; return true; }
+        var sg = side ? -w.lean : w.lean, ex = w.x + px * d * sg, ey = w.y + py * d * sg, clear = true;
+        for (k = 1; k <= d && clear; k++) clear = walkable(w.x + px * k * sg, w.y + py * k * sg);
+        if (clear && walkable(ex + fx * 2, ey + fy * 2)) { w.x += px * sp * sg; w.y += py * sp * sg; w.lean = sg; return true; }
       }
     }
     return false;
   }
 
+  function by(i, k) { return env.two ? env.by(i, k) : env.pressed(k); }
+
+  // Frodigi, beside Magnio, whenever they get off the tram or the funicular.
+  function placeFro() {
+    if (!env.two) return;
+    var f = { x: S.x - 4, y: S.y, lean: 1, step: 0, moving: false };
+    if (!walkable(f.x, f.y)) f.x = S.x;
+    S.fro = f;
+  }
+
+  // He walks as Magnio does. If the camera leaves him behind, he catches up
+  // and turns up just behind Tove.
+  function stepFro() {
+    var f = S.fro;
+    if (!f) return;
+    var dx = (by(1, 'right') ? 1 : 0) - (by(1, 'left') ? 1 : 0);
+    var dy = (by(1, 'down') ? 1 : 0) - (by(1, 'up') ? 1 : 0);
+    f.moving = false;
+    if (dx || dy) {
+      var n = dx && dy ? SPEED * 0.71 : SPEED, ox = f.x, oy = f.y;
+      tryMove(f, dx * n, dy * n);
+      if (f.x !== ox || f.y !== oy) { f.moving = true; f.step++; }
+    }
+    if (!inView(f.x, f.y, -6)) {
+      var tv = S.trail[Math.max(0, S.trail.length - 20)] || [S.x, S.y];
+      f.x = tv[0]; f.y = tv[1];
+    }
+  }
+
   function stepWalk() {
-    var dx = (env.pressed('right') ? 1 : 0) - (env.pressed('left') ? 1 : 0);
-    var dy = (env.pressed('down') ? 1 : 0) - (env.pressed('up') ? 1 : 0);
+    var dx = (by(0, 'right') ? 1 : 0) - (by(0, 'left') ? 1 : 0);
+    var dy = (by(0, 'down') ? 1 : 0) - (by(0, 'up') ? 1 : 0);
     S.moving = false;
     if (dx || dy) {
       var n = dx && dy ? SPEED * 0.71 : SPEED;
       var ox = S.x, oy = S.y;
-      tryMove(dx * n, dy * n);
+      tryMove(S, dx * n, dy * n);
       // after a beer or two he does not walk quite straight
       if (S.tipsy > 0) {
         var sway = Math.sin(S.t / 14) * 0.2 * S.tipsy;
@@ -937,6 +969,7 @@
       }
     }
     follow();
+    stepFro();
 
     for (var i = 0; i < SIGHTS.length; i++) {
       var s = SIGHTS[i];
@@ -989,6 +1022,7 @@
       for (var k = 0; k < 12 && !walkable(S.x, S.y); k++) S.y++;
       S.trail = [];
       for (var i = 0; i < 20; i++) S.trail.push([S.x, S.y]);
+      placeFro();
       S.ride = null;
       S.phase = 'walk';
     }
@@ -1000,15 +1034,18 @@
   // The two of them, five pixels wide and eight high.
   var FIG = {
     me: { rows: ['.CCC.', '.SSS.', '.SWS.', 'RRRRR', 'SRRRS', '.OOO.'], pal: { C: '#c8302c', S: '#f8c088', W: '#f4f4f4', R: '#1a62f0', O: '#1c1c22' } },
-    tove: { rows: ['.YYY.', 'YSSSY', 'YSSSY', 'CCCCC', 'SCCCS', '.LLL.'], pal: { Y: '#f0d070', S: '#f8c088', C: '#c8304a', L: '#2a3448' } }
+    tove: { rows: ['.YYY.', 'YSSSY', 'YSSSY', 'CCCCC', 'SCCCS', '.LLL.'], pal: { Y: '#f0d070', S: '#f8c088', C: '#c8304a', L: '#2a3448' } },
+    fro: { rows: ['.CCC.', '.SSS.', '.SSS.', 'RRRRR', 'SRRRS', '.OOO.'], pal: { C: '#2a5aa8', S: '#f8c088', R: '#1f8e3a', O: '#3a3020' } }
   };
-  function drawFig(ctx, who, x, y, walking) {
+  var LEGS = { me: '#1c1c22', tove: '#2a3448', fro: '#3a3020' };
+  // step is how far this one has walked, for the legs; Magnio's and Tove's by default
+  function drawFig(ctx, who, x, y, walking, step) {
     var f = FIG[who], x0 = Math.round(x) - 2, y0 = Math.round(y) - 8;
     for (var r = 0; r < f.rows.length; r++) for (var c = 0; c < 5; c++) {
       var ch = f.rows[r][c];
       if (ch !== '.') rect(ctx, x0 + c, y0 + r, 1, 1, f.pal[ch]);
     }
-    var leg = who === 'me' ? '#1c1c22' : '#2a3448', ph = walking ? (S.step >> 3) % 2 : 0;
+    var leg = LEGS[who], ph = walking ? ((step === undefined ? S.step : step) >> 3) % 2 : 0;
     rect(ctx, x0 + 1 + (ph ? 0 : 0), y0 + 6, 1, ph ? 1 : 2, leg); rect(ctx, x0 + 3, y0 + 6, 1, ph ? 2 : 1, leg);
     rect(ctx, x0 + 1, y0 + (ph ? 7 : 8), 1, 1, '#3a2010'); rect(ctx, x0 + 3, y0 + (ph ? 8 : 7), 1, 1, '#3a2010');
   }
@@ -1112,6 +1149,7 @@
     if (S.phase !== 'tram' && S.phase !== 'ride' || (S.phase === 'tram' && S.t > 40)) {
       var tv = S.trail[Math.max(0, S.trail.length - 14)] || [S.x, S.y];
       drawFig(ctx, 'tove', tv[0] - cx, tv[1] - cy, S.moving);
+      if (S.fro) drawFig(ctx, 'fro', S.fro.x - cx, S.fro.y - cy, S.fro.moving, S.fro.step);
       drawFig(ctx, 'me', S.x - cx, S.y - cy, S.moving);
     }
     drawBits(ctx);

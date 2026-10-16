@@ -33,7 +33,10 @@ gjennom hele livet sitt på bursdagen sin, og trengte verktøyet til en statue.)
    kronene sine på ett av dem (opp og ned velger selskap, venstre og høyre
    beløp, ✕ satser og □ går ut). Kommentatoren roper underveis, og hver
    tredje runde kommer et sjansekort som i Monopol. Han vinner oftere enn
-   han taper, og banken låner ham penger hvis han går tom.
+   han taper, og banken låner ham penger hvis han går tom. Mens man satser,
+   spiller det rolig, swingende musikk. Er de to, satser Frodigi også, på
+   sitt eget selskap og med sine egne kroner, og løpet starter når begge
+   har trykket ✕.
 4. **Heim**: fra parkeringsplassen, forbi hytta og ned til brygga, og over
    fjorden med sjekta mens makrellen hopper. Tove går bak Magnio forbi
    hytta, og så løper hun i forveien ned til brygga og fisker. Første fisk
@@ -46,7 +49,8 @@ gjennom hele livet sitt på bursdagen sin, og trengte verktøyet til en statue.)
    På bordet ved hytta står Catan. Det spilles ikke helt, bare om lengste vei:
    Magnio, Tove og en mystisk tredjeperson bygger én vei hver etter tur i åtte
    runder (pilene velger sted og ✕ bygger), og den lengste veien vinner. Blir
-   det uavgjort, vinner bursdagsbarnet.
+   det uavgjort, vinner bursdagsbarnet. Er de to, tar Frodigi den tredje
+   plassen og bygger sine egne veier.
 5. **Værnes**: flyplassen. Ved gatene velger man Moraira, Praha eller Lillesand
    (trykk opp eller △). Moraira og Praha er valgfrie sideturer der
    leietakerne betaler husleie. Lillesand fører historien videre.
@@ -67,7 +71,8 @@ gjennom hele livet sitt på bursdagen sin, og trengte verktøyet til en statue.)
    de kan også kjøpe trdelník og en halvliter på U Fleků (✕ ved butikken).
    Det som kjøpes, flyr opp i lista. Hver halvliter gjør Magnio litt mer
    bedugget en stund: byen gynger, han går ikke helt rett, og etter et par
-   ser han dobbelt.
+   ser han dobbelt. Er de to, er Frodigi med og går dit han vil, så lenge
+   han holder seg på skjermen.
    Lanovka tar dem opp og ned Petřín. Når alt på lista er kjøpt, er de
    fornøyde med handleturen, tar trikken og er tilbake i Praha-brettet.
    □ tar trikken hjem før det.
@@ -102,7 +107,7 @@ gjennom hele livet sitt på bursdagen sin, og trengte verktøyet til en statue.)
 Mellom brettene er det et kart over Sør-Norge. Pilene flytter Magnio til
 stedet som ligger i den retningen, ✕ reiser dit, og □ viser sporene. Fremgang, kroner og spor
 lagres i nettleseren. Pausemenyen (Options) har valgene spill videre, til
-kartet, musikk av og på og start hele spillet på nytt: opp og ned velger, ✕ tar
+kartet, musikk av og på, to spillere av og på og start hele spillet på nytt: opp og ned velger, ✕ tar
 valget og □ går tilbake. Å starte på nytt må bekreftes. Det samme gjør `?ny` i
 adressen, og `?stille` slår av all lyd (for eksempel `?ny&stille`).
 
@@ -124,7 +129,8 @@ får med seg siste versjon av alt. I de fleste nettlesere går det også an å
 ferdige kartet, hvert brett, boksekampen, finalen, rulleteksten, kaka og
 dansen. Fremgangen lagres ikke når man bruker en snarvei. Legg til `?x=150`
 for å starte et brett ved kolonne 150, for eksempel `?til=haroya&x=150`. Det er
-nyttig når man tester senere deler av brettet.
+nyttig når man tester senere deler av brettet. `?to` tar med Frodigi på det
+andre tastaturoppsettet (WASD, G og H), for eksempel `?til=catan&to`.
 
 ## Kontroller
 
@@ -140,7 +146,10 @@ F eller dobbeltklikk gir fullskjerm. M slår musikken av og på.
 
 Spiller 2 blir med når som helst ved å trykke hopp på en kontroll til, og
 spiller som Frodigi. Kameraet følger Magnio, og Frodigi hentes tilbake til
-ham hvis han blir hengende etter.
+ham hvis han blir hengende etter. «To spillere: av» i pausemenyen sender
+Frodigi hjem, og ingen kan bli med før det slås på igjen. I Catan, på Børsen
+og i Praha har Frodigi noe eget å gjøre. I de andre
+minispillene styrer begge kontrollene det samme.
 
 ## Det som er med
 

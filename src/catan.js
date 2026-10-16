@@ -8,6 +8,8 @@
 // The arrows pick where Magnio builds next and ✕ builds there. The other
 // two think for a moment and build where it makes their own road longest,
 // though they do not always see it. A draw goes to the birthday boy.
+// With two players, Frodigi takes the third seat and builds his own roads,
+// with the second controller.
 (function () {
   var SM = window.SM = window.SM || {};
   var F = SM.font, AU = SM.audio, A = SM.art;
@@ -32,6 +34,8 @@
     { name: 'TOVE', col: '#3a6ad8', dark: '#1a3a80', at: [62, -4], miss: 0.4 },
     { name: '???', col: '#f4f4f4', dark: '#707070', at: [-26, -60], miss: 0.45 }
   ];
+  var STRANGER = PLAYERS[2], FRODIGI = { name: 'FRODIGI', col: '#3aa040', dark: '#1a6020', at: STRANGER.at };
+  var FAINT = [['#f4c0b0', '#c89080'], null, ['#b8e8b0', '#78b070']];
 
   var S = null, env = null, board = null;
 
@@ -200,10 +204,15 @@
   }
 
   // ---------------------------------------------------------------- the game
+  // Whose turn is played with a controller: Magnio's, and Frodigi's when he is there.
+  function human(p) { return p === 0 || (p === 2 && env.two); }
+  function press(k) { return env.two ? env.by(S.turn === 0 ? 0 : 1, k) : env.pressed(k); }
+
   function start(e) {
     env = e;
     board = buildBoard();
-    S = { phase: 'intro', t: 0, turn: 0, round: 1, homes: [], built: [0, 0, 0], longest: [0, 0, 0], sel: -1,
+    PLAYERS[2] = env.two ? FRODIGI : STRANGER;
+    S = { phase: 'intro', t: 0, turn: 0, round: 1, homes: [], built: [0, 0, 0], longest: [0, 0, 0], sel: -1, last: {},
       say: 'TOVE: SKAL ME TA ET SLAG CATAN? DEN SOM BYGGE LENGST VEI, VINNE!', who: null };
     for (var p = 0; p < PLAYERS.length; p++) S.homes.push(nearestVert(BX + PLAYERS[p].at[0], BY + PLAYERS[p].at[1], S.homes));
     AU.startMusic('main');
@@ -229,11 +238,11 @@
     S.turn = p;
     var c = choices(p);
     if (!c.length) { S.say = PLAYERS[p].name + ' KOMMER IKKE VIDERE.'; return nextTurn(); }
-    if (p === 0) {
+    if (human(p)) {
       // start on the choice nearest the last road built, or nearest home
-      var from = S.last !== undefined ? board.edges[S.last] : { mx: board.verts[S.homes[0]].x, my: board.verts[S.homes[0]].y };
+      var from = S.last[p] !== undefined ? board.edges[S.last[p]] : { mx: board.verts[S.homes[p]].x, my: board.verts[S.homes[p]].y };
       S.sel = nearest(c, from.mx, from.my);
-      S.say = S.round === 1 ? 'DIN TUR! VELG HVOR VEIEN SKAL GÅ, OG BYGG MED ' + X + '.' : 'DIN TUR, MAGNIO.';
+      S.say = S.round === 1 ? (p ? 'FRODIGI SIN TUR' : 'DIN TUR') + '! VELG HVOR VEIEN SKAL GÅ, OG BYGG MED ' + X + '.' : 'DIN TUR, ' + PLAYERS[p].name + '.';
       go('mine');
     } else {
       S.say = PLAYERS[p].name === 'TOVE' ? 'TOVE TENKE...' : '???: ...';
@@ -259,10 +268,10 @@
 
   // The arrows jump to the nearest choice in that direction.
   function stepMine() {
-    var c = choices(0), dirs = { leftP: [-1, 0], rightP: [1, 0], upP: [0, -1], downP: [0, 1] };
+    var c = choices(S.turn), dirs = { leftP: [-1, 0], rightP: [1, 0], upP: [0, -1], downP: [0, 1] };
     if (c.indexOf(S.sel) < 0) S.sel = c[0];
     for (var k in dirs) {
-      if (!env.pressed(k)) continue;
+      if (!press(k)) continue;
       var cur = board.edges[S.sel], d = dirs[k], best = -1, bd = Infinity;
       for (var i = 0; i < c.length; i++) {
         if (c[i] === S.sel) continue;
@@ -272,9 +281,9 @@
       }
       if (best >= 0) { S.sel = best; AU.sfx('talk'); }
     }
-    if (S.t > 8 && env.pressed('jumpP')) {
-      build(0, S.sel);
-      S.last = S.sel;
+    if (S.t > 8 && press('jumpP')) {
+      build(S.turn, S.sel);
+      S.last[S.turn] = S.sel;
       nextTurn();
     }
   }
@@ -314,6 +323,9 @@
     } else if (w === 1) {
       S.say = 'TOVE: HA! EG VANT! SKAL ME TA EN RUNDE TE?';
       AU.sfx('down');
+    } else if (env.two) {
+      S.say = 'TOVE: GRATULERE, FRODIGI! DU SLO BÅDE MEG OG MAGNE.';
+      AU.sfx('clear');
     } else {
       S.say = '???: ...';
       AU.sfx('down');
@@ -353,6 +365,7 @@
   function portrait(p) {
     if (p === 0) return A.player.magnio.normal.big.stand.r;
     if (p === 1) return A.npc.tove.r;
+    if (env.two) return A.player.frodigi.normal.big.stand.r;
     if (!mystery) {
       // the third player: a dark shape in a hat and coat
       var src = A.npc.skurk.r, c = document.createElement('canvas'), g = c.getContext('2d');
@@ -377,7 +390,7 @@
       var y = 32 + p * 38, pl = PLAYERS[p], img = portrait(p), active = (S.phase === 'mine' || S.phase === 'theirs') && S.turn === p;
       if (active || (S.phase === 'end' && S.winner === p)) { ctx.fillStyle = '#7a5a38'; ctx.fillRect(PANEL_X + 5, y - 2, VW - PANEL_X - 10, 36); }
       ctx.drawImage(img, PANEL_X + 8, y + 32 - img.height);
-      if (p === 2) F.draw(ctx, '?', PANEL_X + 14, y + 10, '#f0d040');
+      if (p === 2 && !env.two) F.draw(ctx, '?', PANEL_X + 14, y + 10, '#f0d040');
       ctx.fillStyle = pl.dark; ctx.fillRect(PANEL_X + 30, y + 3, 8, 8);
       ctx.fillStyle = pl.col; ctx.fillRect(PANEL_X + 31, y + 4, 6, 6);
       F.draw(ctx, pl.name, PANEL_X + 42, y + 4, '#ffffff');
@@ -412,12 +425,12 @@
     var i, e;
     if (S.phase === 'mine') {
       // every place he could build, faintly, and the chosen one blinking
-      var c = choices(0);
+      var c = choices(S.turn);
       for (i = 0; i < c.length; i++) {
         e = board.edges[c[i]];
-        if (c[i] !== S.sel) drawRoad(ctx, e, '#f4c0b0', '#c89080');
+        if (c[i] !== S.sel) drawRoad(ctx, e, FAINT[S.turn][0], FAINT[S.turn][1]);
       }
-      if ((S.t >> 3) & 1) drawRoad(ctx, board.edges[S.sel], '#ffffff', PLAYERS[0].dark);
+      if ((S.t >> 3) & 1) drawRoad(ctx, board.edges[S.sel], '#ffffff', PLAYERS[S.turn].dark);
     }
     for (i = 0; i < board.edges.length; i++) {
       e = board.edges[i];

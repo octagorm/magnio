@@ -105,7 +105,7 @@
     state: 'title', t: 0, L: null, levelId: 'haroya', boats: [], gate: null, players: [], enemies: [], npcs: [], trees: [], items: [], shots: [],
     parts: [], texts: [], bumps: [], camX: 0, freeze: 0, end: null, paused: false, coinHits: {},
     flagY: FLAG_LOW, intro: 0, talk: null, near: null, story: null, mapSel: 0, fade: 0, p2Device: null,
-    save: null
+    noP2: false, save: null
   };
   SM.G = G; // handy for poking at from the browser console
 
@@ -1031,14 +1031,41 @@
   }
 
   // Follow a trail like a duckling: start where one was born, wait for the
-  // line to pass, and then keep lag steps behind the one in front.
+  // line to pass, and then keep lag steps behind the one in front. They go
+  // up only along the trail, where he jumped, while they are moving; the
+  // rest of the time they fall to the floor under them, so nobody is left
+  // hanging where he was in the middle of a jump when he stopped. One who
+  // would stop over the water carries on along the trail, closer to him
+  // than usual, until there is land underneath.
   function trot(d, trail, lag) {
-    var target = trail.length - 1 - lag, from = d.i;
+    var target = trail.length - 1 - lag, end = trail.length - 1, from = d.i;
     if (d.i < target) d.i = Math.min(target, d.i + 2);
+    else if (d.i < end && overWater(trail[Math.round(d.i)])) d.i = Math.min(end, d.i + 2);
     var pt = trail[Math.max(0, Math.round(d.i))];
     d.walking = d.i !== from;
     if (pt.x !== d.x) d.left = pt.x < d.x;
-    d.x = pt.x; d.b = pt.b;
+    d.x = pt.x;
+    if (d.walking && pt.b < d.b) {
+      d.b = Math.max(pt.b, d.b - 4);
+      d.vy = 0;
+      return;
+    }
+    var floor = floorUnder(d.x, d.b);
+    if (floor === null) floor = Math.max(pt.b, d.b); // over water, on the boat: as he went
+    d.vy = (d.vy || 0) + GRAV_FALL;
+    d.b += d.vy;
+    if (d.b >= floor) { d.b = floor; d.vy = 0; }
+  }
+
+  function overWater(pt) { return floorUnder(pt.x, pt.b) === null; }
+
+  // The top of the first floor at or below b, under a duckling's feet at x.
+  function floorUnder(x, b) {
+    var l = Math.floor((x - 3) / TS), r = Math.floor((x + 3) / TS);
+    for (var ty = Math.floor(b / TS); ty < G.L.height; ty++) {
+      if (solidAt(l, ty) || solidAt(r, ty)) return ty * TS;
+    }
+    return null;
   }
 
   function flatAt(x) {
@@ -1567,16 +1594,23 @@
   // (src/quiz.js), the Indian restaurant in Moraira (src/indisk.js) and the
   // walk round Praha (src/byvandring.js). Afterwards the level carries on where it was.
   var MINIGAMES = { drive: 'drive', bors: 'stock', catan: 'catan', sloye: 'gut', quiz: 'quiz', indisk: 'curry', byvandring: 'city' };
+  // pressed is any controller, as in the menus. With two players, by(i, ...)
+  // is what player i is pressing, and coins2 is Frodigi's purse, for the
+  // minigames where he has something of his own to do.
   function startMinigame(name, extra) {
-    var p1 = G.players[0];
+    var p1 = G.players[0], p2 = G.players[1];
     G.state = 'minigame';
     G.minigame = SM[MINIGAMES[name]];
     G.minigame.start({
       pressed: anyPressed,
+      two: !!p2,
+      by: pressedBy,
       fish: extra && extra.fish,
       big: p1.power > 0,
       coins: function () { return p1.coins; },
       setCoins: function (n) { p1.coins = n; },
+      coins2: function () { return p2 ? p2.coins : 0; },
+      setCoins2: function (n) { if (p2) p2.coins = n; },
       done: function () {
         G.state = 'play';
         G.minigame = null;
@@ -1851,8 +1885,10 @@
   }
 
   // The pause menu: up and down move the pointer, ✕ picks, □ goes a step
-  // back. Starting over asks first, with NO picked to begin with.
-  var PAUSE_MENU = ['videre', 'kart', 'musikk', 'nytt'];
+  // back. Starting over asks first, with NO picked to begin with. Turning
+  // two players off sends Frodigi home and stops anyone joining until it is
+  // turned on again; then a second controller joins with ✕ as before.
+  var PAUSE_MENU = ['videre', 'kart', 'musikk', 'to', 'nytt'];
   function stepPause(d) {
     var n = G.confirmReset ? 2 : PAUSE_MENU.length;
     if (d.upP || d.downP) {
@@ -1877,6 +1913,7 @@
     if (pick === 'videre') { G.paused = false; AU.setPaused(false); AU.sfx('pause'); }
     else if (pick === 'kart') { G.paused = false; AU.setPaused(false); toMap(G.levelId); }
     else if (pick === 'musikk') { AU.toggleMusic(); AU.sfx('talk'); }
+    else if (pick === 'to') { G.noP2 = !G.noP2; if (G.noP2) leavePlayer(); AU.sfx('talk'); }
     else { G.confirmReset = true; G.confirmSel = 0; AU.sfx('talk'); }
   }
 
@@ -1944,6 +1981,21 @@
       addText(p.x + 6, p.y - 10, 'FRODIGI!', '#80ff80');
       AU.sfx('join');
     }
+  }
+
+  function leavePlayer() {
+    if (G.players.length < 2) return;
+    storeWallet();
+    var p = G.players.pop();
+    G.p2Device = null;
+    puff(p.x + p.w / 2, p.y + p.h / 2, 8);
+  }
+
+  // What player i is pressing, for the minigames where Frodigi has a part of
+  // his own. Without a player i, nothing.
+  function pressedBy(i, what) {
+    var p = G.players[i], d = p && IN.devices[p.device];
+    return !!(d && d[what]);
   }
 
   function assigned(id) {
@@ -2015,7 +2067,7 @@
       }
       return;
     }
-    if (G.players.length < 2 && !G.end) {
+    if (G.players.length < 2 && !G.end && !G.noP2) {
       for (id in devs) if (!assigned(id) && devs[id].jumpP) { joinPlayer(id); break; }
     }
     if (G.freeze > 0) {
@@ -2275,7 +2327,7 @@
     ctx.fillStyle = '#f4f4f4'; ctx.fillRect(px, py, 64, 10);
     A.disc(ctx, px + 64, py + 5, 6, 5, '#f4f4f4');
     ctx.fillStyle = '#2a5aa8';
-    for (var t = 0; t < 14; t++) ctx.fillRect(px + Math.round(t * 0.6), py - 14 + t, 10 - Math.round(t * 0.4), 1);
+    for (var t = 0; t < 14; t++) ctx.fillRect(px, py - 14 + t, 4 + Math.round(t * 0.7), 1); // the tail fin, swept back
     ctx.fillStyle = '#c8c8c8'; ctx.fillRect(px + 22, py + 8, 26, 3);
     ctx.fillStyle = '#2c4a6a';
     for (var w = px + 18; w < px + 60; w += 5) ctx.fillRect(w, py + 2, 2, 2);
@@ -2530,7 +2582,9 @@
       menu(['NEI, TILBAKE', 'JA, START PÅ NYTT'], G.confirmSel, 122);
     } else {
       centered('PAUSE', 52, '#ffffff', 2);
-      menu(['SPILL VIDERE', 'TIL KARTET', 'MUSIKK: ' + (AU.musicOn() ? 'PÅ' : 'AV'), 'START HELE SPILLET PÅ NYTT'], G.pauseSel, 86);
+      menu(['SPILL VIDERE', 'TIL KARTET', 'MUSIKK: ' + (AU.musicOn() ? 'PÅ' : 'AV'), 'TO SPILLERE: ' + (G.noP2 ? 'AV' : 'PÅ'),
+        'START HELE SPILLET PÅ NYTT'], G.pauseSel, 80);
+      if (!G.noP2 && G.players.length < 2) centered('FRODIGI BLIR MED MED ' + X + ' PÅ EN KONTROLL TIL', 160, '#b0ffb0');
     }
     centered('OPP OG NED VELGER   ' + X + ' OK   ' + SQ + ' TILBAKE', 186, '#a8b8d0');
   }
@@ -2903,7 +2957,8 @@
       html += '<li><a style="color:#90d8ff" href="?til=' + SHORTCUTS[i][0] + '">' + SHORTCUTS[i][1] + '</a></li>';
     }
     html += '</ul><p>Andre ting i adressen: <code>?ny</code> starter på nytt, <code>?stille</code> slår av lyden, ' +
-      '<code>?windowed</code> hopper over fullskjerm og <code>?x=150</code> starter et brett ved kolonne 150. ' +
+      '<code>?windowed</code> hopper over fullskjerm, <code>?x=150</code> starter et brett ved kolonne 150 og ' +
+      '<code>?to</code> tar med Frodigi på det andre tastaturoppsettet (WASD, G og H). ' +
       'De kan kombineres, for eksempel <code>?til=haroya&amp;x=150&amp;stille</code>.</p>';
     page.innerHTML = html;
     document.body.style.overflow = 'auto';
@@ -2956,6 +3011,9 @@
   });
 
   toTitle();
+  // ?to brings Frodigi along on the second keyboard (G H and WASD), for
+  // trying out two players with a shortcut.
+  if (/[?&]to\b/.test(location.search)) { IN.poll(); G.p2Device = 'kb2'; }
   if (/[?&]snarvei\b/.test(location.search)) showShortcuts();
   else if (shortcut) runShortcut(shortcut);
   var STEP = 1000 / 60, acc = 0, last = performance.now();

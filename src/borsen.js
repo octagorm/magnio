@@ -9,6 +9,10 @@
 // It is kind on purpose: the company he backs wins more often than not,
 // the cards only ever give, and if he runs out the bank lends him some
 // more. He can keep going for as long as he likes, and □ leaves.
+//
+// With two players, Frodigi bets too, on a company of his own choosing and
+// from his own purse, and the race starts once both have pressed ✕. One of
+// the two companies they back wins more often than not.
 (function () {
   var SM = window.SM = window.SM || {};
   var F = SM.font, AU = SM.audio, A = SM.art;
@@ -56,19 +60,24 @@
 
   var S = null, env = null;
 
+  var NAMES = ['MAGNIO', 'FRODIGI'], INK = ['#ffe060', '#b0ffb0'];
+
   function start(e) {
     env = e;
-    S = { phase: 'intro', t: 0, round: 0, pick: 0, bet: 10, odds: [], runners: [], say: '', sayT: 0, result: null, card: null };
+    S = { phase: 'intro', t: 0, round: 0, bets: [{ pick: 0, bet: 10 }], odds: [], runners: [], say: '', sayT: 0, result: null, card: null };
+    if (env.two) S.bets.push({ pick: 1, bet: 10 });
     newOdds();
-    AU.stopMusic();
+    AU.startMusic('bors');
     AU.sfx('bell');
   }
 
   function go(phase) { S.phase = phase; S.t = 0; }
-  function money() { return env.coins(); }
-  function setMoney(n) { env.setCoins(Math.max(0, Math.round(n))); }
+  // i is the player: 0 Magnio, 1 Frodigi
+  function money(i) { return i ? env.coins2() : env.coins(); }
+  function setMoney(i, n) { n = Math.max(0, Math.round(n)); if (i) env.setCoins2(n); else env.setCoins(n); }
   function say(text, frames) { S.say = text; S.sayT = frames || 150; }
   function pressed(b) { return env.pressed(b); }
+  function by(i, b) { return env.two ? env.by(i, b) : env.pressed(b); }
 
   function newOdds() {
     var o = ODDS.slice();
@@ -87,7 +96,8 @@
     var P = S.phase;
     if (P === 'intro') {
       // the welcome stays up until the first bet, so there is time to read it
-      if (S.t === 1) say('VELKOMMEN TIL TRONDHEIM BØRS! HER LØPER AKSJENE OM KAPP.', Infinity);
+      // (with two, the bottom line is needed for the buttons, so it goes after a while)
+      if (S.t === 1) say('VELKOMMEN TIL TRONDHEIM BØRS! HER LØPER AKSJENE OM KAPP.', env.two ? 300 : Infinity);
       if (S.t > 40) go('pick');
     } else if (P === 'pick') stepPick();
     else if (P === 'race') stepRace();
@@ -96,37 +106,50 @@
         S.round++;
         newOdds();
         S.say = ''; S.sayT = 0;
+        AU.startMusic('bors');
         if (S.round % 3 === 0) { S.card = CARDS[Math.floor(Math.random() * CARDS.length)]; go('card'); AU.sfx('power'); }
         else go('pick');
       }
     } else if (P === 'card') {
-      if (S.t === 40) { setMoney(money() + S.card[2]); AU.sfx('coin'); }
+      if (S.t === 40) { for (var c = 0; c < S.bets.length; c++) setMoney(c, money(c) + S.card[2]); AU.sfx('coin'); }
       if (S.t > 60 && pressed('jumpP')) go('pick');
     }
   }
 
+  // Each player picks and bets with their own controller, and ✕ says they
+  // are ready. Changing their mind afterwards takes the ready back.
   function stepPick() {
-    if (S.t === 1 && money() < 10) {
-      setMoney(money() + LOAN);
-      say('BANKEN GIR DEG ET LÅN PÅ ' + LOAN + ' KR. RENTEFRITT, SELVFØLGELIG!', Infinity);
-      AU.sfx('coin');
+    var i, b, all = true;
+    for (i = 0; i < S.bets.length; i++) {
+      b = S.bets[i];
+      if (S.t === 1) {
+        if (money(i) < 10) {
+          setMoney(i, money(i) + LOAN);
+          say(env.two ? 'BANKEN LÅNER ' + NAMES[i] + ' ' + LOAN + ' KR. RENTEFRITT, SELVFØLGELIG!' : 'BANKEN GIR DEG ET LÅN PÅ ' + LOAN + ' KR. RENTEFRITT, SELVFØLGELIG!', env.two ? 240 : Infinity);
+          AU.sfx('coin');
+        }
+      }
+      if (by(i, 'upP')) b.pick = (b.pick + COMPANIES.length - 1) % COMPANIES.length;
+      if (by(i, 'downP')) b.pick = (b.pick + 1) % COMPANIES.length;
+      var step = money(i) >= 200 ? 50 : 10;
+      if (by(i, 'rightP')) b.bet += step;
+      if (by(i, 'leftP')) b.bet -= step;
+      b.bet = Math.max(10, Math.min(money(i), b.bet));
+      if (by(i, 'upP') || by(i, 'downP') || by(i, 'leftP') || by(i, 'rightP')) { b.ready = false; AU.sfx('talk'); }
+      if (S.t > 10 && by(i, 'jumpP') && !b.ready) { b.ready = true; if (env.two) AU.sfx('join'); }
+      if (!b.ready) all = false;
     }
-    if (pressed('upP')) { S.pick = (S.pick + COMPANIES.length - 1) % COMPANIES.length; AU.sfx('talk'); }
-    if (pressed('downP')) { S.pick = (S.pick + 1) % COMPANIES.length; AU.sfx('talk'); }
-    var step = money() >= 200 ? 50 : 10;
-    if (pressed('rightP')) { S.bet += step; AU.sfx('talk'); }
-    if (pressed('leftP')) { S.bet -= step; AU.sfx('talk'); }
-    S.bet = Math.max(10, Math.min(money(), S.bet));
     if (S.t > 10 && pressed('fireP')) { env.done(); return; }
-    if (S.t > 10 && pressed('jumpP')) startRace();
+    if (all) startRace();
   }
 
   // Who wins is decided up front, and each runner's path is shaped so it
   // finishes in the right order: some start fast and fade, some come from
   // behind, and they all wobble a little on the way.
   function startRace() {
-    var winner = Math.random() < WIN_CHANCE ? S.pick : pickOther(S.pick);
-    var T = 420 + Math.floor(Math.random() * 80), runnerUp = pickOther(winner);
+    var picks = S.bets.map(function (b) { return b.pick; });
+    var winner = Math.random() < WIN_CHANCE ? picks[Math.floor(Math.random() * picks.length)] : pickOther(picks);
+    var T = 420 + Math.floor(Math.random() * 80), runnerUp = pickOther([winner]);
     S.runners = COMPANIES.map(function (c, i) {
       // one runner-up close behind for a tight finish, the rest spread out
       var close = i === runnerUp ? 4 + Math.random() * 16 : 25 + Math.random() * 140;
@@ -134,8 +157,7 @@
         phase: Math.random() * 6, f: 0, popAt: c.look === 'boble' && i !== winner ? 0.45 + Math.random() * 0.3 : 0 };
     });
     S.winner = winner;
-    S.stake = S.bet;
-    setMoney(money() - S.bet);
+    for (var i = 0; i < S.bets.length; i++) { S.bets[i].stake = S.bets[i].bet; S.bets[i].ready = false; setMoney(i, money(i) - S.bets[i].bet); }
     S.leader = -1; S.leadT = 0; S.callT = 0;
     go('race');
     AU.sfx('bell');
@@ -143,9 +165,11 @@
     say('OG DE ER I GANG!', 120);
   }
 
-  function pickOther(i) {
-    var j = Math.floor(Math.random() * (COMPANIES.length - 1));
-    return j >= i ? j + 1 : j;
+  // Any company but these.
+  function pickOther(not) {
+    var rest = [];
+    for (var i = 0; i < COMPANIES.length; i++) if (not.indexOf(i) < 0) rest.push(i);
+    return rest[Math.floor(Math.random() * rest.length)];
   }
 
   function stepRace() {
@@ -177,19 +201,19 @@
   }
 
   function finishRace() {
-    var w = S.winner, won = w === S.pick, second = Infinity;
+    var w = S.winner, second = Infinity, any = false, texts = [];
     for (var k = 0; k < S.runners.length; k++) if (k !== w) second = Math.min(second, S.runners[k].time);
     var margin = second - S.runners[w].time;
     AU.stopMusic();
-    if (won) {
-      var prize = S.stake * S.odds[S.pick];
-      setMoney(money() + prize);
-      S.result = { won: true, text: 'DU VANT ' + prize + ' KR!', sub: 'GRATULERER! DU SLO MARKEDET.' };
-      AU.sfx('clear');
-    } else {
-      S.result = { won: false, text: 'DU TAPTE ' + S.stake + ' KR.', sub: 'MARKEDET ER UFORUTSIGBART. PRØV IGJEN!' };
-      AU.sfx('down');
+    for (var i = 0; i < S.bets.length; i++) {
+      var b = S.bets[i], won = w === b.pick, prize = b.stake * S.odds[b.pick];
+      if (won) { setMoney(i, money(i) + prize); any = true; }
+      texts.push(NAMES[i] + (won ? ' VANT ' + prize + ' KR!' : ' TAPTE ' + b.stake + ' KR.'));
     }
+    if (env.two) S.result = { won: any, text: texts.join(' '), sub: '' };
+    else if (any) S.result = { won: true, text: 'DU VANT ' + S.bets[0].stake * S.odds[w] + ' KR!', sub: 'GRATULERER! DU SLO MARKEDET.' };
+    else S.result = { won: false, text: 'DU TAPTE ' + S.bets[0].stake + ' KR.', sub: 'MARKEDET ER UFORUTSIGBART. PRØV IGJEN!' };
+    AU.sfx(any ? 'clear' : 'down');
     say(COMPANIES[w].name + (margin < 20 ? ' VINNER MED EN NESELENGDE!' : ' VINNER SUVERENT!'), Infinity);
     go('result');
   }
@@ -347,10 +371,13 @@
       var r = S.runners[i], f = r && (S.phase === 'race' || S.phase === 'result') ? r.f : 0;
       drawRunner(ctx, i, laneX(i, f), feet(i));
       if (S.phase === 'pick' || S.phase === 'intro' || S.phase === 'card') drawLabel(ctx, i);
-      else if (i === S.pick) {
-        var mx = Math.round(laneX(i, f)) + 14;
-        ctx.fillStyle = '#ffe060';
-        ctx.fillRect(mx, feet(i) - 34 - ((S.t >> 3) & 1), 3, 3); // a marker over his pick
+      else {
+        for (var k = 0; k < S.bets.length; k++) {
+          if (S.bets[k].pick !== i) continue;
+          var mx = Math.round(laneX(i, f)) + 14 + k * 5;
+          ctx.fillStyle = INK[k];
+          ctx.fillRect(mx, feet(i) - 34 - ((S.t >> 3) & 1), 3, 3); // a marker over each pick
+        }
       }
     }
     if (S.dust) {
@@ -368,14 +395,20 @@
   }
 
   // Name and odds beside each horse while bets are being placed.
+  // Magnio's pick is yellow, and Frodigi's green.
   function drawLabel(ctx, i) {
-    var c = COMPANIES[i], mine = i === S.pick, text = c.name + '  ODDS ' + S.odds[i];
+    var c = COMPANIES[i], text = c.name + '  ODDS ' + S.odds[i], mine = -1, k;
+    for (k = S.bets.length - 1; k >= 0; k--) if (S.bets[k].pick === i) mine = k;
     var x = startX(i) + 44, y = feet(i) - 11, w = F.width(text) + 6;
-    ctx.fillStyle = mine ? 'rgba(42,52,96,0.92)' : 'rgba(20,24,40,0.75)';
+    ctx.fillStyle = mine >= 0 ? 'rgba(42,52,96,0.92)' : 'rgba(20,24,40,0.75)';
     ctx.fillRect(x - 3, y - 2, w, 11);
     ctx.fillStyle = c.silk; ctx.fillRect(x - 3, y - 2, 2, 11);
-    F.draw(ctx, text, x + 1, y, mine ? '#ffe060' : '#e8f0e0');
-    if (mine && (S.t >> 4) & 1) F.draw(ctx, '<', x + w, y, '#ffe060');
+    F.draw(ctx, text, x + 1, y, mine >= 0 ? INK[mine] : '#e8f0e0');
+    for (k = 0, x += w; k < S.bets.length; k++) {
+      if (S.bets[k].pick !== i) continue;
+      if (S.bets[k].ready || (S.t >> 4) & 1) F.draw(ctx, S.bets[k].ready ? '*' : '<', x, y, INK[k]);
+      x += 8;
+    }
   }
 
   function drawTicker(ctx) {
@@ -394,10 +427,11 @@
     var y = PANEL_Y;
     ctx.fillStyle = '#0c1a3a';
     ctx.fillRect(0, y, VW, VH - y);
-    var kr = 'KR ' + money();
+    if (env.two) { drawPanel2(ctx, y); return; }
+    var kr = 'KR ' + money(0), b = S.bets[0];
     if (S.phase === 'pick') {
-      var c = COMPANIES[S.pick];
-      F.draw(ctx, 'SATS ' + S.bet + ' KR PÅ ' + c.name + ' (ODDS ' + S.odds[S.pick] + ')', 8, y + 4, '#ffe060');
+      var c = COMPANIES[b.pick];
+      F.draw(ctx, 'SATS ' + b.bet + ' KR PÅ ' + c.name + ' (ODDS ' + S.odds[b.pick] + ')', 8, y + 4, '#ffe060');
       F.draw(ctx, kr, VW - 8 - F.width(kr), y + 4, '#ffffff');
       F.draw(ctx, 'OPP/NED: SELSKAP  < >: BELØP  ' + X + ' SATS  ' + SQ + ' GÅ UT', 8, y + 15, '#c0d0e8');
       if (S.sayT > 0) F.draw(ctx, S.say, 8, y + 26, '#ffffff');
@@ -405,12 +439,40 @@
       F.draw(ctx, 'KOMMENTATOREN:', 8, y + 4, '#90d8ff');
       F.draw(ctx, kr, VW - 8 - F.width(kr), y + 4, '#ffffff');
       F.draw(ctx, S.say, 8, y + 15, '#ffffff');
-      if (S.phase === 'race') F.draw(ctx, 'DU HAR SATSET ' + S.stake + ' KR PÅ ' + COMPANIES[S.pick].name + '.', 8, y + 26, '#c0d0e8');
+      if (S.phase === 'race') F.draw(ctx, 'DU HAR SATSET ' + b.stake + ' KR PÅ ' + COMPANIES[b.pick].name + '.', 8, y + 26, '#c0d0e8');
     }
-    if (S.phase === 'result') {
-      F.draw(ctx, S.result.text + ' ' + S.result.sub, 8, y + 26, S.result.won ? '#80ff90' : '#ffb0a0');
-      if (S.t > 60 && (S.t >> 5) & 1) F.draw(ctx, X, VW - 14, y + 26, '#ffffff');
+    drawResult(ctx, y);
+  }
+
+  function drawResult(ctx, y) {
+    if (S.phase !== 'result') return;
+    F.draw(ctx, S.result.text + ' ' + S.result.sub, 8, y + 26, S.result.won ? '#80ff90' : '#ffb0a0');
+    if (S.t > 60 && (S.t >> 5) & 1) F.draw(ctx, X, VW - 14, y + 26, '#ffffff');
+  }
+
+  // With two players: a line each while betting, and both purses.
+  function drawPanel2(ctx, y) {
+    var i, b, right;
+    if (S.phase === 'pick') {
+      for (i = 0; i < S.bets.length; i++) {
+        b = S.bets[i];
+        F.draw(ctx, NAMES[i] + ': ' + b.bet + ' KR PÅ ' + COMPANIES[b.pick].name + ' (ODDS ' + S.odds[b.pick] + ')', 8, y + 4 + i * 11, INK[i]);
+        right = (b.ready ? 'KLAR!  ' : '') + 'KR ' + money(i);
+        F.draw(ctx, right, VW - 8 - F.width(right), y + 4 + i * 11, '#ffffff');
+      }
+      if (S.sayT > 0) F.draw(ctx, S.say, 8, y + 26, '#ffffff');
+      else F.draw(ctx, 'OPP/NED: SELSKAP  < >: BELØP  ' + X + ' KLAR  ' + SQ + ' GÅ UT', 8, y + 26, '#c0d0e8');
+      return;
     }
+    F.draw(ctx, 'KOMMENTATOREN:', 8, y + 4, '#90d8ff');
+    right = 'MAGNIO KR ' + money(0) + '  FRODIGI KR ' + money(1);
+    F.draw(ctx, right, VW - 8 - F.width(right), y + 4, '#ffffff');
+    F.draw(ctx, S.say, 8, y + 15, '#ffffff');
+    if (S.phase === 'race') {
+      F.draw(ctx, 'MAGNIO: ' + COMPANIES[S.bets[0].pick].name, 8, y + 26, INK[0]);
+      F.draw(ctx, 'FRODIGI: ' + COMPANIES[S.bets[1].pick].name, 8 + F.width('MAGNIO: ' + COMPANIES[S.bets[0].pick].name + '   '), y + 26, INK[1]);
+    }
+    drawResult(ctx, y);
   }
 
   function drawCard(ctx) {
